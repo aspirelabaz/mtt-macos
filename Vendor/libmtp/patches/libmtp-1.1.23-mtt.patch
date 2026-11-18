@@ -1,0 +1,30 @@
+--- a/src/device-flags.h	2026-11-18 16:25:40
++++ b/src/device-flags.h	2026-11-18 16:25:40
+@@ -317,13 +317,14 @@
+  * These are auto-assigned to devices reporting
+  * "android.com" in their device extension descriptor.
+  */
++/* MTT: no DEVICE_FLAG_FORCE_RESET_ON_CLOSE. On macOS the reset makes the phone
++ * drop off USB for ~1 s after every close and the next session gets I/O errors. */
+ #define DEVICE_FLAGS_ANDROID_BUGS \
+   (DEVICE_FLAG_BROKEN_MTPGETOBJPROPLIST | \
+    DEVICE_FLAG_BROKEN_SET_OBJECT_PROPLIST | \
+    DEVICE_FLAG_BROKEN_SEND_OBJECT_PROPLIST | \
+    DEVICE_FLAG_UNLOAD_DRIVER | \
+-   DEVICE_FLAG_LONG_TIMEOUT | \
+-   DEVICE_FLAG_FORCE_RESET_ON_CLOSE)
++   DEVICE_FLAG_LONG_TIMEOUT)
+ /**
+  * All these bug flags appear on a number of SonyEricsson
+  * devices including Android devices not using the stock
+--- a/src/libusb1-glue.c	2026-11-18 16:25:40
++++ b/src/libusb1-glue.c	2026-11-18 16:25:40
+@@ -52,7 +52,7 @@
+  * spend a bit of time collecting data.  Higher values also
+  * make connecting/disconnecting more reliable.
+  */
+-#define USB_START_TIMEOUT 5000
++#define USB_START_TIMEOUT 1500  /* MTT: was 5000; the first OpenSession after a reset times out here */
+ #define USB_TIMEOUT_DEFAULT     20000
+ #define USB_TIMEOUT_LONG        60000
+ static inline int get_timeout(PTP_USB* ptp_usb)

@@ -1,15 +1,20 @@
 # Vendored libmtp + libusb
 
-Copied from Homebrew (libmtp 1.1.23, libusb 1.0.30) so the app doesn't break
-when Homebrew upgrades them. `CMTPShim` mirrors libmtp 1.1.23's private
-`PTP_USB` struct, so the version is pinned on purpose.
+- **libmtp 1.1.23, built from source with two small patches**
+  ([patches/libmtp-1.1.23-mtt.patch](patches/libmtp-1.1.23-mtt.patch)):
+  - `USB_START_TIMEOUT` 5000 → 1500 ms. The first OpenSession after a USB reset
+    (e.g. after cancelling a transfer) always times out; this cut the recovery
+    from ~10 s to the time measured in PLAN.md.
+  - Android devices no longer get `DEVICE_FLAG_FORCE_RESET_ON_CLOSE` (on macOS
+    the reset made the phone drop off USB after every close). `CMTPShim` also
+    clears it at runtime, so either one alone is enough.
+- **libusb 1.0.30**, copied from Homebrew.
 
-Install names were changed to `@rpath/...` and the dylibs re-signed ad hoc
-(Xcode re-signs them with the team identity when embedding):
+Rebuild libmtp with `scripts/build-libmtp.sh <libmtp-1.1.23.tar.gz>` (the tarball
+comes from `brew fetch --build-from-source libmtp`; needs `pkg-config`).
 
-    install_name_tool -id @rpath/libmtp.9.dylib lib/libmtp.9.dylib
-    install_name_tool -change /opt/homebrew/opt/libusb/lib/libusb-1.0.0.dylib @rpath/libusb-1.0.0.dylib lib/libmtp.9.dylib
-    install_name_tool -id @rpath/libusb-1.0.0.dylib lib/libusb-1.0.0.dylib
-    codesign --force --sign - lib/*.dylib
+Install names are `@rpath/...`; the app embeds both dylibs in
+`Contents/Frameworks` and Xcode re-signs them. `CMTPShim` mirrors libmtp
+1.1.23's private `PTP_USB` struct, so the version is pinned on purpose.
 
-Both libraries are LGPL-2.1 (see `licenses/`); they are linked dynamically.
+Both libraries are LGPL-2.1 (see `licenses/`) and are linked dynamically.

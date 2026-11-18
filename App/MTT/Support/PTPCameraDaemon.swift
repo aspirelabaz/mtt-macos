@@ -50,7 +50,7 @@ enum PTPCameraDaemon {
 
     /// Stops every running ptpcamerad and waits (up to ~2.5 s) for the phone's
     /// interface to be let go. ptpcamerad ignores SIGTERM, so it gets SIGKILL
-    /// if still alive after half a second. Returns true if the interface is free.
+    /// if still alive after 0.2 s. Returns true if the interface is free.
     @discardableResult
     static func stop() -> Bool {
         let targets = pids()
@@ -58,7 +58,8 @@ enum PTPCameraDaemon {
             let rc = kill(pid, SIGTERM)
             log.notice("SIGTERM ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)), privacy: .public)")
         }
-        usleep(500_000)
+        // It has never exited on SIGTERM in testing; don't wait long.
+        for _ in 0..<4 where targets.contains(where: { kill($0, 0) == 0 }) { usleep(50_000) }
         for pid in targets where kill(pid, 0) == 0 {
             let rc = kill(pid, SIGKILL)
             log.notice("SIGKILL ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)), privacy: .public)")
