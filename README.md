@@ -49,7 +49,10 @@ an Apple ID signed in to Xcode (a free Personal Team works for your own Mac).
 CLI only: `cd Packages/MTPKit && swift build && .build/debug/mtt info`
 (quit the app first: only one process can hold the phone).
 
-## License notes
+## License
 
-libmtp and libusb are LGPL-2.1 and are linked dynamically; their licenses are
-in `Vendor/libmtp/licenses/`.
+MTT's own code is under the [MIT License](LICENSE).
+
+The bundled libmtp and libusb (`Vendor/libmtp`) are LGPL-2.1 and keep that
+license; they are linked dynamically, and their license texts are in
+`Vendor/libmtp/licenses/`.
