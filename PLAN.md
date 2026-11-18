@@ -214,8 +214,10 @@ App chỉ dùng cá nhân, nên bỏ phần notarize / DMG. Người dùng đã 
 - [x] **Finder: tiến độ theo byte** khi chép vào/ra, truyền bằng cơ chế `Progress` của NSXPCConnection; nút huỷ của Finder huỷ luôn lượt truyền. Log xác nhận progress đã được gắn
 
 - [x] **Tự build lại libmtp từ mã nguồn, có 2 bản vá** ([Vendor/libmtp/patches](Vendor/libmtp/patches/libmtp-1.1.23-mtt.patch), build lại bằng [scripts/build-libmtp.sh](scripts/build-libmtp.sh)):
-  - `USB_START_TIMEOUT` từ 5 giây xuống 1,5 giây: huỷ khi còn nhiều dữ liệu chỉ còn **khoảng 6 giây** (trước 10,4 giây, ban đầu 12,9 giây)
+  - `USB_START_TIMEOUT` từ 5 giây xuống 1,5 giây: huỷ khi còn nhiều dữ liệu chỉ còn **khoảng 5–6 giây** (trước 10,4 giây, ban đầu 12,9 giây). Đã thử 0,5 giây nhưng lần mở đầu luôn ra một phiên không trả lời, nên app phải reset thêm một vòng, kết quả còn chậm hơn
   - bỏ cờ reset USB khi đóng kết nối cho máy Android ngay trong mã nguồn
+- [x] Ngưỡng "nhận nốt" khi huỷ nâng từ 48 lên **96 MB** (khoảng 3,5 giây ở 28 MB/s, tương đương thời gian reset). Kết nối lại chờ cố định 0,4 giây sau reset: mở sớm hơn thì điện thoại chưa trả lời
+- [x] **Kéo thả để di chuyển trong cửa sổ app**: thả lên một thư mục, hoặc vào thư mục đang mở. Mục kéo từ MTT được chuyển ngay trên điện thoại (kiểu dữ liệu riêng `local.mtt.item`), file kéo từ Finder thì được chép vào đúng thư mục đó
 - [x] **Cắt / Dán trong cửa sổ app** (⌘X / ⌘V hoặc chuột phải): di chuyển ngay trên điện thoại bằng MoveObject, mục đã cắt hiện mờ. Nếu sau đó clipboard đổi (sao chép thứ khác) thì lệnh cắt bị bỏ.
 
 ---

@@ -24,7 +24,7 @@
   * make connecting/disconnecting more reliable.
   */
 -#define USB_START_TIMEOUT 5000
-+#define USB_START_TIMEOUT 1500  /* MTT: was 5000; the first OpenSession after a reset times out here */
++#define USB_START_TIMEOUT 1500  /* MTT: was 5000; the first OpenSession after a reset times out here. 500 was too short: the retry then gave a session that did not answer. */
  #define USB_TIMEOUT_DEFAULT     20000
  #define USB_TIMEOUT_LONG        60000
  static inline int get_timeout(PTP_USB* ptp_usb)

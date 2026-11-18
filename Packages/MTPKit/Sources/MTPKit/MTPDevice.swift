@@ -43,9 +43,9 @@ public final class MTPDevice: @unchecked Sendable {
     private let aborting = Atomic<Bool>(false)
 
     /// Cancelling a transfer with this much (or less) left just lets it finish
-    /// and discards the result: aborting mid-transfer jams Android's USB pipe
-    /// and costs a ~12 s reset (libmtp's first reopen attempt waits 5 s).
-    public static let drainLimit: UInt64 = 48 * 1024 * 1024
+    /// and discards the result: aborting mid-transfer jams Android's USB pipe and
+    /// needs a reset + reopen (~4–5 s). At ~28 MB/s, 96 MB takes about as long.
+    public static let drainLimit: UInt64 = 96 * 1024 * 1024
 
     public init(raw: RawDeviceInfo) throws {
         MTP.initialize()
@@ -113,21 +113,19 @@ public final class MTPDevice: @unchecked Sendable {
             d.vendorID == raw.vendorID && d.productID == raw.productID
         }
 
-        // 1. Give the reset a moment to take the old attachment off the bus, so we
-        //    don't reopen it just before it drops. On macOS the reset usually does
-        //    not re-enumerate (same address), so don't wait long.
-        let goneBy = Date().addingTimeInterval(0.3)
-        while Date() < goneBy {
-            let present = ((try? MTP.detectRawDevices()) ?? []).contains { $0.usbKey == oldKey }
-            if !present { break }
-            Thread.sleep(forTimeInterval: 0.2)
-        }
+        // The phone needs a moment after the reset before it answers: opening at
+        // once got a session that didn't respond and cost another reset (~1.5 s).
+        // (It doesn't re-enumerate on macOS, so there's no "left the bus" to wait for.)
+        _ = oldKey
+        Thread.sleep(forTimeInterval: 0.4)
 
         mtpTrace("reconnect: old device gone (or gave up waiting)")
         // 2. Wait for it to come back and open it.
         var lastError: Error = MTPError.deviceGone
+        var firstTry = true
         while Date() < deadline {
-            Thread.sleep(forTimeInterval: 0.3)
+            if !firstTry { Thread.sleep(forTimeInterval: 0.3) }
+            firstTry = false
             guard let candidate = ((try? MTP.detectRawDevices()) ?? []).first(where: sameModel) else {
                 mtpTrace("reconnect: not on bus yet")
                 continue

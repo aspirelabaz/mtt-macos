@@ -2,7 +2,7 @@
 
 - **libmtp 1.1.23, built from source with two small patches**
   ([patches/libmtp-1.1.23-mtt.patch](patches/libmtp-1.1.23-mtt.patch)):
-  - `USB_START_TIMEOUT` 5000 → 1500 ms. The first OpenSession after a USB reset
+  - `USB_START_TIMEOUT` 5000 → 1500 ms (500 was tried: too short, the retry then gave a session that did not answer). The first OpenSession after a USB reset
     (e.g. after cancelling a transfer) always times out; this cut the recovery
     from ~10 s to the time measured in PLAN.md.
   - Android devices no longer get `DEVICE_FLAG_FORCE_RESET_ON_CLOSE` (on macOS
