@@ -4,8 +4,13 @@ import SwiftUI
 @main
 struct MTTApp: App {
     init() {
+        Agent.bootstrap()  // may hand over to a launchd-started copy and exit
         _ = TransferManager.shared  // hooks into device removal
         DeviceManager.shared.start()
+        if Agent.finderIntegrationAvailable {
+            ServiceHost.shared.start()
+            DomainManager.shared.start()
+        }
     }
 
     var body: some Scene {
@@ -14,6 +19,8 @@ struct MTTApp: App {
                 .frame(minWidth: 780, minHeight: 460)
         }
         .defaultSize(width: 1000, height: 640)
+        // Opened from MenuBarLabel instead, so a login launch stays in the menu bar.
+        .defaultLaunchBehavior(.suppressed)
         .commands {
             CommandGroup(replacing: .newItem) {}
         }
@@ -21,8 +28,23 @@ struct MTTApp: App {
         MenuBarExtra {
             MenuBarContent()
         } label: {
-            Image(systemName: DeviceManager.shared.devices.contains(where: \.isReady) ? "smartphone.fill" : "smartphone")
+            MenuBarLabel()
         }
+    }
+}
+
+/// Always alive (it's in the menu bar), so it decides whether to open the window at launch.
+private struct MenuBarLabel: View {
+    @Environment(\.openWindow) private var openWindow
+
+    var body: some View {
+        Image(systemName: DeviceManager.shared.devices.contains(where: \.isReady) ? "smartphone.fill" : "smartphone")
+            .task {
+                if Agent.shouldOpenWindowAtLaunch() {
+                    openWindow(id: "browser")
+                    NSApp.activate()
+                }
+            }
     }
 }
 
@@ -54,6 +76,10 @@ private struct MenuBarContent: View {
         if transfers.activeCount > 0 {
             Divider()
             Text("Đang chuyển \(transfers.activeCount) mục…")
+        }
+        if !Agent.finderIntegrationAvailable && !Agent.disabled {
+            Divider()
+            Text("Chưa hiện trong Finder: cần bật MTT trong Cài đặt > Mục đăng nhập")
         }
         Divider()
         Button("Mở trình duyệt file") {

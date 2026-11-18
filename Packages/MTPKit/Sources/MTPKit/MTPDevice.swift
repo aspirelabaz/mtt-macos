@@ -226,23 +226,39 @@ public final class MTPDevice: @unchecked Sendable {
     /// A partial file is removed on failure.
     public func download(_ entry: MTPEntry, to localPath: String, progress: MTPProgress? = nil) throws {
         try download(id: entry.id, to: localPath, progress: progress)
-        var attrs: [FileAttributeKey: Any] = [.posixPermissions: 0o644]  // libmtp creates files 0750
+        var attrs: [FileAttributeKey: Any] = [.posixPermissions: 0o644]
         if let modified = entry.modified { attrs[.modificationDate] = modified }
         try? FileManager.default.setAttributes(attrs, ofItemAtPath: localPath)
     }
 
     /// Copies a file from the device to `localPath`. A partial file is removed on failure.
     public func download(id: UInt32, to localPath: String, progress: MTPProgress? = nil) throws {
+        let fd = Darwin.open(localPath, O_WRONLY | O_CREAT | O_TRUNC, 0o644)
+        guard fd >= 0 else {
+            throw MTPError.operationFailed("Download", ["cannot create \(localPath): \(String(cString: strerror(errno)))"])
+        }
+        do {
+            try download(id: id, toFileDescriptor: fd, progress: progress)
+            Darwin.close(fd)
+        } catch {
+            Darwin.close(fd)
+            unlink(localPath)
+            throw error
+        }
+    }
+
+    /// Copies a file from the device into an open, writable file descriptor
+    /// (e.g. one passed over XPC by a sandboxed process). Does not close it.
+    public func download(id: UInt32, toFileDescriptor fd: Int32, progress: MTPProgress? = nil) throws {
         try withHandle { h in
             let box = ProgressBox(progress, onCancel: shortenTimeoutForCancel(h))
             let rc = withExtendedLifetime(box) {
-                LIBMTP_Get_File_To_File(h, id, localPath, progressTrampoline,
-                                        UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
+                LIBMTP_Get_File_To_File_Descriptor(h, id, fd, progressTrampoline,
+                                                   UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
             }
             if rc != 0 {
                 mtpTrace("libmtp transfer returned \(rc)")
                 let err = takeErrors(h) ?? ([], false)
-                try? FileManager.default.removeItem(atPath: localPath)
                 let error = box.cancelled ? MTPError.cancelled : classify("Download", err)
                 try recoverAfterAbortedTransfer(error)
                 throw error
@@ -254,10 +270,26 @@ public final class MTPDevice: @unchecked Sendable {
     @discardableResult
     public func upload(localPath: String, name: String? = nil, storageID: UInt32, parentID: UInt32,
                        progress: MTPProgress? = nil) throws -> MTPEntry {
-        let attrs = try FileManager.default.attributesOfItem(atPath: localPath)
-        let size = (attrs[.size] as? NSNumber)?.uint64Value ?? 0
-        let mtime = (attrs[.modificationDate] as? Date) ?? Date()
-        let fileName = name ?? (localPath as NSString).lastPathComponent
+        let fd = Darwin.open(localPath, O_RDONLY)
+        guard fd >= 0 else {
+            throw MTPError.operationFailed("Upload", ["cannot open \(localPath): \(String(cString: strerror(errno)))"])
+        }
+        defer { Darwin.close(fd) }
+        return try upload(fileDescriptor: fd, name: name ?? (localPath as NSString).lastPathComponent,
+                          storageID: storageID, parentID: parentID, progress: progress)
+    }
+
+    /// Copies everything readable from `fd` into a device folder as `name`.
+    /// Size and date come from fstat. Does not close the descriptor.
+    @discardableResult
+    public func upload(fileDescriptor fd: Int32, name fileName: String, storageID: UInt32, parentID: UInt32,
+                       progress: MTPProgress? = nil) throws -> MTPEntry {
+        var st = stat()
+        guard fstat(fd, &st) == 0 else {
+            throw MTPError.operationFailed("Upload", ["cannot stat file: \(String(cString: strerror(errno)))"])
+        }
+        let size = UInt64(st.st_size)
+        let mtime = Date(timeIntervalSince1970: TimeInterval(st.st_mtimespec.tv_sec))
 
         return try withHandle { h in
             guard let f = LIBMTP_new_file_t() else {
@@ -273,8 +305,8 @@ public final class MTPDevice: @unchecked Sendable {
 
             let box = ProgressBox(progress, onCancel: shortenTimeoutForCancel(h))
             let rc = withExtendedLifetime(box) {
-                LIBMTP_Send_File_From_File(h, localPath, f, progressTrampoline,
-                                           UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
+                LIBMTP_Send_File_From_File_Descriptor(h, fd, f, progressTrampoline,
+                                                      UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
             }
             if rc != 0 {
                 mtpTrace("libmtp transfer returned \(rc)")
@@ -336,9 +368,17 @@ public final class MTPDevice: @unchecked Sendable {
     }
 
     /// Renames a file or folder in place.
+    ///
+    /// Uses LIBMTP_Set_File_Name, which also updates libmtp's per-session object
+    /// cache. (LIBMTP_Set_Object_String doesn't: listings in the same session
+    /// kept showing the old name, so a lookup by the new name failed.)
     public func rename(id: UInt32, to newName: String) throws {
         try withHandle { h in
-            guard LIBMTP_Set_Object_String(h, id, LIBMTP_PROPERTY_ObjectFileName, newName) == 0 else {
+            guard let f = LIBMTP_Get_Filemetadata(h, id) else {
+                throw classify("Rename", takeErrors(h) ?? ([], false))
+            }
+            defer { LIBMTP_destroy_file_t(f) }
+            guard LIBMTP_Set_File_Name(h, f, newName) == 0 else {
                 throw classify("Rename", takeErrors(h) ?? ([], false))
             }
         }

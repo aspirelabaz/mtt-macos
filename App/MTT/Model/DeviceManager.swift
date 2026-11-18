@@ -150,6 +150,7 @@ final class DeviceManager {
     static let shared = DeviceManager()
 
     private(set) var devices: [ConnectedDevice] = []
+    @ObservationIgnored let startedAt = Date()
     /// Called after a phone disappears, with its ID (used to fail its transfers).
     @ObservationIgnored var onDeviceRemoved: ((String) -> Void)?
 

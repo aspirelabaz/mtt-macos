@@ -7,6 +7,7 @@ let package = Package(
     platforms: [.macOS("27.0")],
     products: [
         .library(name: "MTPKit", targets: ["MTPKit"]),
+        .library(name: "MTTShared", targets: ["MTTShared"]),
         .executable(name: "mtt", targets: ["mtt"]),
     ],
     targets: [
@@ -15,6 +16,8 @@ let package = Package(
             name: "CLibMTP",
             providers: [.brew(["libmtp"])]
         ),
+        // XPC protocol + DTOs shared by the app and the Finder extension (no libmtp).
+        .target(name: "MTTShared"),
         // Small C helpers that reach into libmtp's private device state.
         .target(
             name: "CMTPShim",

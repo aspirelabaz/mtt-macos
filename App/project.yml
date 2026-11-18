@@ -9,6 +9,18 @@ packages:
   MTPKit:
     path: ../Packages/MTPKit
 
+settings:
+  base:
+    # Personal team ID (Xcode > Settings > Accounts). Empty = ad-hoc signing,
+    # which builds but can't load the Finder extension.
+    DEVELOPMENT_TEAM: K5GD459T4W
+    MARKETING_VERSION: "0.2"
+    CURRENT_PROJECT_VERSION: "2"
+    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+    # App Group shared by the app and the extension (TeamIdentifierPrefix = "TEAMID.").
+    MTT_APP_GROUP: $(TeamIdentifierPrefix)local.mtt
+
 targets:
   MTT:
     type: application
@@ -17,21 +29,77 @@ targets:
     dependencies:
       - package: MTPKit
         product: MTPKit
+      - package: MTPKit
+        product: MTTShared
+      - target: MTTFileProvider
+    info:
+      path: MTT/Info.plist
+      properties:
+        CFBundleDisplayName: MTT
+        LSApplicationCategoryType: public.app-category.utilities
+        MTTAppGroup: $(MTT_APP_GROUP)
+    entitlements:
+      path: MTT/MTT.entitlements
+      properties:
+        com.apple.security.application-groups: [$(MTT_APP_GROUP)]
     settings:
       base:
         PRODUCT_NAME: MTT
         PRODUCT_BUNDLE_IDENTIFIER: local.mtt.app
-        MARKETING_VERSION: "0.1"
-        CURRENT_PROJECT_VERSION: "1"
         SWIFT_VERSION: "6.0"
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: MTT
-        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
-        # Personal-use build: sign to run locally, no sandbox, no hardened runtime
-        # (Homebrew's libmtp dylib is not signed by us, so library validation would block it).
-        CODE_SIGN_IDENTITY: "-"
-        CODE_SIGN_STYLE: Manual
-        ENABLE_HARDENED_RUNTIME: NO
+        CODE_SIGN_STYLE: Automatic
+        # Not sandboxed: it owns the USB connection via Homebrew's libmtp
+        # (no library validation for the same reason).
         ENABLE_APP_SANDBOX: NO
         LIBRARY_SEARCH_PATHS: /opt/homebrew/opt/libmtp/lib
-        ENABLE_USER_SCRIPT_SANDBOXING: NO
+    postBuildScripts:
+      - name: Write launch agent plist
+        basedOnDependencyAnalysis: false
+        script: |
+          # launchd agent that runs the app and owns its Mach service (name includes the team ID).
+          DIR="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchAgents"
+          mkdir -p "$DIR"
+          cat > "$DIR/local.mtt.agent.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>Label</key><string>local.mtt.agent</string>
+            <key>BundleProgram</key><string>Contents/MacOS/MTT</string>
+            <key>MachServices</key>
+            <dict><key>${MTT_APP_GROUP}.service</key><true/></dict>
+            <key>RunAtLoad</key><true/>
+            <key>ProcessType</key><string>Interactive</string>
+            <key>LimitLoadToSessionType</key><string>Aqua</string>
+            <key>AssociatedBundleIdentifiers</key><array><string>local.mtt.app</string></array>
+          </dict>
+          </plist>
+          EOF
+
+  MTTFileProvider:
+    type: app-extension
+    platform: macOS
+    sources: [../FileProviderExt]
+    dependencies:
+      - package: MTPKit
+        product: MTTShared
+    info:
+      path: ../FileProviderExt/Info.plist
+      properties:
+        CFBundleDisplayName: MTT
+        MTTAppGroup: $(MTT_APP_GROUP)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.fileprovider-nonui
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).FileProviderExtension
+          NSExtensionFileProviderSupportsEnumeration: true
+    entitlements:
+      path: ../FileProviderExt/MTTFileProvider.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups: [$(MTT_APP_GROUP)]
+    settings:
+      base:
+        PRODUCT_NAME: MTTFileProvider
+        PRODUCT_BUNDLE_IDENTIFIER: local.mtt.app.fileprovider
+        SWIFT_VERSION: "5.0"
+        CODE_SIGN_STYLE: Automatic

@@ -7,42 +7,99 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		09B70F6ABC1A64FCE2358233 /* FileProviderExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51153ADF87B638FB24723789 /* FileProviderExtension.swift */; };
 		0E92E1E2F37746B84510FDAB /* Support.swift in Sources */ = {isa = PBXBuildFile; fileRef = 384D2E594B0821174A17AC64 /* Support.swift */; };
+		112A1A5BC2A477858CF7BFE7 /* MTTShared in Frameworks */ = {isa = PBXBuildFile; productRef = 039B8C50DA994479EE84DB1E /* MTTShared */; };
+		1DDEC75D6E1BB33F0A7C50DD /* IDMap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01107C098509671585A13A10 /* IDMap.swift */; };
 		2EFBC68D5F2A86F89A350C73 /* TransfersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 98E431DCBE2C1EA038ED5880 /* TransfersView.swift */; };
+		33A1B615DAE0F624A78ACEFF /* FileProviderItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55B2DAB23046DE4BF9F64AE1 /* FileProviderItem.swift */; };
 		34448E1D3121F621A77EA90F /* DeviceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68859E6A74783EFD9338D37 /* DeviceWorker.swift */; };
 		3BCFF4179BFEFD114A41CDC6 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7AAA6BCFE7A82706F078BF /* SidebarView.swift */; };
 		407B4973291BCF1B7E5B8CBA /* MTTApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */; };
+		661CE954DB1EDB28F0456A58 /* Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6700946C2A6D5C7FE9A5DE32 /* Agent.swift */; };
 		6716C9D386A049129E992E46 /* DragPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50073C2B30278F826E8B37BC /* DragPayload.swift */; };
 		70A309353FE22CC67BFF113B /* MTPKit in Frameworks */ = {isa = PBXBuildFile; productRef = AEB4710ED3E1D42C40D16640 /* MTPKit */; };
+		8D81EC672B13209A2E485D5D /* Enumerators.swift in Sources */ = {isa = PBXBuildFile; fileRef = E72E4F773E4063C8A08866FF /* Enumerators.swift */; };
 		917BB921EEBACCEA7DB44E2A /* BrowserView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8D53423CA52FE289ABF2DDC4 /* BrowserView.swift */; };
+		9A3FBCDF4D41798A305CF239 /* MTTShared in Frameworks */ = {isa = PBXBuildFile; productRef = C21C8A096792F226AB0FF799 /* MTTShared */; };
+		A703D24F49E3C7B685CF027C /* DomainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914324AD3D832C10D6341396 /* DomainManager.swift */; };
 		AE85A86C8C685E9231F83EAE /* FileViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05ADCE29B9E1362BCD7F0ADA /* FileViews.swift */; };
+		B653956BC33874A9C13D6849 /* ServiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */; };
+		BE9E0DAFBDF430ECA482322E /* MTTFileProvider.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */; };
+		CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */; };
 		EF87F2D5B686E6365D5066FA /* TransferManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */; };
 		F82062B66E895A92F1963DD2 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF4F5DBE0EC39F59B4B5839 /* BrowserModel.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		E348B112CE8F16F98F4495AC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = CFE9C01A913E345FF4F7A379 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3F6361ECFE4E7234C8354896;
+			remoteInfo = MTTFileProvider;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		08ED9EDBB6283CBDA49B7BB9 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				BE9E0DAFBDF430ECA482322E /* MTTFileProvider.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		01107C098509671585A13A10 /* IDMap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IDMap.swift; sourceTree = "<group>"; };
+		02E3BC7306CA743622EAC617 /* MTT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MTT.entitlements; sourceTree = "<group>"; };
 		04D2E7DC8A500C5D44CB209D /* MTPKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MTPKit; path = ../Packages/MTPKit; sourceTree = SOURCE_ROOT; };
 		05ADCE29B9E1362BCD7F0ADA /* FileViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileViews.swift; sourceTree = "<group>"; };
+		07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MTTFileProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1F3B7C4F39BE83440CB05984 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2578E39B2DB99913F478E13C /* MTT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		384D2E594B0821174A17AC64 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
+		3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceHost.swift; sourceTree = "<group>"; };
 		50073C2B30278F826E8B37BC /* DragPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPayload.swift; sourceTree = "<group>"; };
+		51153ADF87B638FB24723789 /* FileProviderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProviderExtension.swift; sourceTree = "<group>"; };
 		51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTTApp.swift; sourceTree = "<group>"; };
+		55B2DAB23046DE4BF9F64AE1 /* FileProviderItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProviderItem.swift; sourceTree = "<group>"; };
 		5C7AAA6BCFE7A82706F078BF /* SidebarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SidebarView.swift; sourceTree = "<group>"; };
+		656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceClient.swift; sourceTree = "<group>"; };
+		6700946C2A6D5C7FE9A5DE32 /* Agent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Agent.swift; sourceTree = "<group>"; };
+		70BE3A87102BE3AC9987B0EB /* MTTFileProvider.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MTTFileProvider.entitlements; sourceTree = "<group>"; };
 		7DF4F5DBE0EC39F59B4B5839 /* BrowserModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserModel.swift; sourceTree = "<group>"; };
 		8D53423CA52FE289ABF2DDC4 /* BrowserView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrowserView.swift; sourceTree = "<group>"; };
+		914324AD3D832C10D6341396 /* DomainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainManager.swift; sourceTree = "<group>"; };
 		98E431DCBE2C1EA038ED5880 /* TransfersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransfersView.swift; sourceTree = "<group>"; };
 		A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferManager.swift; sourceTree = "<group>"; };
 		B68859E6A74783EFD9338D37 /* DeviceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceWorker.swift; sourceTree = "<group>"; };
+		C7CE8690F3F4DFA82652C6E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
+		E72E4F773E4063C8A08866FF /* Enumerators.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Enumerators.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		1E98E302F2E0F1DC7FA79908 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9A3FBCDF4D41798A305CF239 /* MTTShared in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		F9F0B7258E80C12330453732 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				70A309353FE22CC67BFF113B /* MTPKit in Frameworks */,
+				112A1A5BC2A477858CF7BFE7 /* MTTShared in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,6 +110,7 @@
 			isa = PBXGroup;
 			children = (
 				D149640A8BE56A5433CCF237 /* MTT */,
+				AB72D39BD3FDC43EEDDEAF25 /* mtt-macos */,
 				7D0F8951AF046C8E40B3D1DB /* Packages */,
 				D833171A129574E08D0D51EE /* Products */,
 			);
@@ -86,11 +144,47 @@
 			name = Packages;
 			sourceTree = "<group>";
 		};
+		895AE53EB42D977EE89E3D71 /* FileProviderExt */ = {
+			isa = PBXGroup;
+			children = (
+				E72E4F773E4063C8A08866FF /* Enumerators.swift */,
+				51153ADF87B638FB24723789 /* FileProviderExtension.swift */,
+				55B2DAB23046DE4BF9F64AE1 /* FileProviderItem.swift */,
+				01107C098509671585A13A10 /* IDMap.swift */,
+				1F3B7C4F39BE83440CB05984 /* Info.plist */,
+				70BE3A87102BE3AC9987B0EB /* MTTFileProvider.entitlements */,
+				656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */,
+			);
+			path = FileProviderExt;
+			sourceTree = "<group>";
+		};
+		98B44990CB002DB113C0AC8C /* Service */ = {
+			isa = PBXGroup;
+			children = (
+				6700946C2A6D5C7FE9A5DE32 /* Agent.swift */,
+				914324AD3D832C10D6341396 /* DomainManager.swift */,
+				3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */,
+			);
+			path = Service;
+			sourceTree = "<group>";
+		};
+		AB72D39BD3FDC43EEDDEAF25 /* mtt-macos */ = {
+			isa = PBXGroup;
+			children = (
+				895AE53EB42D977EE89E3D71 /* FileProviderExt */,
+			);
+			name = "mtt-macos";
+			path = ..;
+			sourceTree = "<group>";
+		};
 		D149640A8BE56A5433CCF237 /* MTT */ = {
 			isa = PBXGroup;
 			children = (
+				C7CE8690F3F4DFA82652C6E1 /* Info.plist */,
+				02E3BC7306CA743622EAC617 /* MTT.entitlements */,
 				51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */,
 				EBACCAEF45477D457C5402A8 /* Model */,
+				98B44990CB002DB113C0AC8C /* Service */,
 				74A97A2860A1F2A30B35FDB1 /* Support */,
 				2B3F6AB764756A097788EDF3 /* Views */,
 			);
@@ -101,6 +195,7 @@
 			isa = PBXGroup;
 			children = (
 				2578E39B2DB99913F478E13C /* MTT.app */,
+				07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -125,18 +220,41 @@
 			buildPhases = (
 				C1D143EBBF53D9A0E6CDD96F /* Sources */,
 				F9F0B7258E80C12330453732 /* Frameworks */,
+				08ED9EDBB6283CBDA49B7BB9 /* Embed Foundation Extensions */,
+				13D313368A7384D5FDC940CD /* Write launch agent plist */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				920DBE43DF38D1062D4500B2 /* PBXTargetDependency */,
+			);
+			name = MTT;
+			packageProductDependencies = (
+				AEB4710ED3E1D42C40D16640 /* MTPKit */,
+				039B8C50DA994479EE84DB1E /* MTTShared */,
+			);
+			productName = MTT;
+			productReference = 2578E39B2DB99913F478E13C /* MTT.app */;
+			productType = "com.apple.product-type.application";
+		};
+		3F6361ECFE4E7234C8354896 /* MTTFileProvider */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 2377919D36AB91F00D841205 /* Build configuration list for PBXNativeTarget "MTTFileProvider" */;
+			buildPhases = (
+				6B9D30FD21CB1CC3FD309FAD /* Sources */,
+				1E98E302F2E0F1DC7FA79908 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = MTT;
+			name = MTTFileProvider;
 			packageProductDependencies = (
-				AEB4710ED3E1D42C40D16640 /* MTPKit */,
+				C21C8A096792F226AB0FF799 /* MTTShared */,
 			);
-			productName = MTT;
-			productReference = 2578E39B2DB99913F478E13C /* MTT.app */;
-			productType = "com.apple.product-type.application";
+			productName = MTTFileProvider;
+			productReference = 07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -148,7 +266,12 @@
 				LastUpgradeCheck = 1430;
 				TargetAttributes = {
 					2AEEA612AFABF5256435EE9F = {
-						ProvisioningStyle = Manual;
+						DevelopmentTeam = K5GD459T4W;
+						ProvisioningStyle = Automatic;
+					};
+					3F6361ECFE4E7234C8354896 = {
+						DevelopmentTeam = K5GD459T4W;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -170,22 +293,60 @@
 			projectRoot = "";
 			targets = (
 				2AEEA612AFABF5256435EE9F /* MTT */,
+				3F6361ECFE4E7234C8354896 /* MTTFileProvider */,
 			);
 		};
 /* End PBXProject section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		13D313368A7384D5FDC940CD /* Write launch agent plist */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Write launch agent plist";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# launchd agent that runs the app and owns its Mach service (name includes the team ID).\nDIR=\"$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Library/LaunchAgents\"\nmkdir -p \"$DIR\"\ncat > \"$DIR/local.mtt.agent.plist\" <<EOF\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n  <key>Label</key><string>local.mtt.agent</string>\n  <key>BundleProgram</key><string>Contents/MacOS/MTT</string>\n  <key>MachServices</key>\n  <dict><key>${MTT_APP_GROUP}.service</key><true/></dict>\n  <key>RunAtLoad</key><true/>\n  <key>ProcessType</key><string>Interactive</string>\n  <key>LimitLoadToSessionType</key><string>Aqua</string>\n  <key>AssociatedBundleIdentifiers</key><array><string>local.mtt.app</string></array>\n</dict>\n</plist>\nEOF\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		6B9D30FD21CB1CC3FD309FAD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8D81EC672B13209A2E485D5D /* Enumerators.swift in Sources */,
+				09B70F6ABC1A64FCE2358233 /* FileProviderExtension.swift in Sources */,
+				33A1B615DAE0F624A78ACEFF /* FileProviderItem.swift in Sources */,
+				1DDEC75D6E1BB33F0A7C50DD /* IDMap.swift in Sources */,
+				B653956BC33874A9C13D6849 /* ServiceClient.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		C1D143EBBF53D9A0E6CDD96F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				661CE954DB1EDB28F0456A58 /* Agent.swift in Sources */,
 				F82062B66E895A92F1963DD2 /* BrowserModel.swift in Sources */,
 				917BB921EEBACCEA7DB44E2A /* BrowserView.swift in Sources */,
 				C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */,
 				34448E1D3121F621A77EA90F /* DeviceWorker.swift in Sources */,
+				A703D24F49E3C7B685CF027C /* DomainManager.swift in Sources */,
 				6716C9D386A049129E992E46 /* DragPayload.swift in Sources */,
 				AE85A86C8C685E9231F83EAE /* FileViews.swift in Sources */,
 				407B4973291BCF1B7E5B8CBA /* MTTApp.swift in Sources */,
+				CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */,
 				3BCFF4179BFEFD114A41CDC6 /* SidebarView.swift in Sources */,
 				0E92E1E2F37746B84510FDAB /* Support.swift in Sources */,
 				EF87F2D5B686E6365D5066FA /* TransferManager.swift in Sources */,
@@ -195,27 +356,29 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		920DBE43DF38D1062D4500B2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3F6361ECFE4E7234C8354896 /* MTTFileProvider */;
+			targetProxy = E348B112CE8F16F98F4495AC /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
 		072239F044DD835CC913E39F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_ENTITLEMENTS = MTT/MTT.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MTT;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_FILE = MTT/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/homebrew/opt/libmtp/lib;
-				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app;
 				PRODUCT_NAME = MTT;
 				SDKROOT = macosx;
@@ -227,22 +390,16 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_IDENTITY = "-";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_ENTITLEMENTS = MTT/MTT.entitlements;
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
-				ENABLE_USER_SCRIPT_SANDBOXING = NO;
-				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = MTT;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_FILE = MTT/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/homebrew/opt/libmtp/lib;
-				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app;
 				PRODUCT_NAME = MTT;
 				SDKROOT = macosx;
@@ -284,9 +441,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = K5GD459T4W;
+				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -302,8 +463,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				MTT_APP_GROUP = "$(TeamIdentifierPrefix)local.mtt";
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
@@ -347,9 +510,13 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 2;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = K5GD459T4W;
+				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -359,8 +526,10 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.2;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				MTT_APP_GROUP = "$(TeamIdentifierPrefix)local.mtt";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_COMPILATION_MODE = wholemodule;
@@ -369,9 +538,56 @@
 			};
 			name = Release;
 		};
+		B59D289F16CEA26F6065958F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../FileProviderExt/MTTFileProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ../FileProviderExt/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app.fileprovider;
+				PRODUCT_NAME = MTTFileProvider;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		B746D3208669B282BD73825C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = ../FileProviderExt/MTTFileProvider.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = ../FileProviderExt/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app.fileprovider;
+				PRODUCT_NAME = MTTFileProvider;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		2377919D36AB91F00D841205 /* Build configuration list for PBXNativeTarget "MTTFileProvider" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B746D3208669B282BD73825C /* Debug */,
+				B59D289F16CEA26F6065958F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		4B54EF1AE237B8319E36E420 /* Build configuration list for PBXNativeTarget "MTT" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -400,9 +616,17 @@
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		039B8C50DA994479EE84DB1E /* MTTShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MTTShared;
+		};
 		AEB4710ED3E1D42C40D16640 /* MTPKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = MTPKit;
+		};
+		C21C8A096792F226AB0FF799 /* MTTShared */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MTTShared;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

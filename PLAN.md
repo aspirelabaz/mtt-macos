@@ -144,6 +144,42 @@ mtt-macos/
 
 **Xong khi:** Cắm điện thoại vào thì Finder hiện mục tên điện thoại ở thanh bên. Mở ảnh, kéo thả và xoá file được như với một ổ đĩa.
 
+### Tiến độ (2026-11-18)
+
+**Đã chạy trong Finder** với Samsung S25 Edge, app ký bằng Personal Team `K5GD459T4W` và cài ở `/Applications/MTT.app`. Đã thử qua đường dẫn `~/Library/CloudStorage/MTT-<tên máy>`:
+- duyệt thư mục; chép ra (video 104 MB khoảng 24 MB/s);
+- chép vào file và thư mục lồng nhau (kiểm tra lại bằng CLI, MD5 khớp);
+- đổi tên file và thư mục tiếng Việt có file con; tạo thư mục; xoá file và xoá cả thư mục.
+
+Không còn job lỗi trong log của fileproviderd.
+
+Thiết kế đã chọn (khác bản phác thảo ban đầu một chút):
+- **App MTT vẫn là process duy nhất giữ USB**, không tách thành helper riêng. App được đăng ký làm launchd agent ([Agent.swift](App/MTT/Service/Agent.swift), `SMAppService.agent`): chạy khi đăng nhập (chỉ hiện trên menu bar) và được launchd tự khởi động khi extension cần.
+- App mở dịch vụ XPC trên Mach service `TEAMID.local.mtt.service` ([ServiceHost.swift](App/MTT/Service/ServiceHost.swift)), chỉ nhận tiến trình ký cùng Team ID. Tên có tiền tố là App Group nên extension trong sandbox được phép kết nối.
+- Giao thức XPC và kiểu dữ liệu nằm trong module `MTTShared` (không phụ thuộc libmtp). Gọi theo **serial điện thoại + đường dẫn**, không theo ID của MTP.
+- Mỗi vùng lưu trữ của mỗi điện thoại là một domain, tức một mục ở thanh bên Finder ([DomainManager.swift](App/MTT/Service/DomainManager.swift)): thêm khi điện thoại sẵn sàng, gỡ khi rút cáp.
+- Extension ([FileProviderExt/](FileProviderExt/)) dùng `NSFileProviderReplicatedExtension`:
+  - Identifier là UUID ánh xạ tới đường dẫn, lưu ra file JSON trong App Group, và được cập nhật khi đổi tên.
+  - File trao đổi qua thư mục `Transfers/` trong App Group, nên macOS không hỏi quyền truy cập dữ liệu của app khác.
+  - Thay đổi phía điện thoại: Finder hỏi working set mỗi 60 giây và ngay sau mỗi thao tác qua app; extension liệt kê lại các thư mục đã xem gần đây rồi so sánh.
+- Chưa hỗ trợ: di chuyển giữa các thư mục trong Finder (báo lỗi "không hỗ trợ"), tiến độ chi tiết khi Finder chép file.
+
+### Các lỗi đã gặp khi thử thật, và cách sửa
+
+- **Bảo vệ dữ liệu app trên macOS mới**: app MTT (không sandbox) không được truy cập App Group container (TCC `SystemPolicyAppData`). Giờ không dùng thư mục chung nữa: extension mở file trong sandbox của nó và **gửi file descriptor qua XPC**; app đọc/ghi bằng `LIBMTP_Get_File_To_File_Descriptor` / `LIBMTP_Send_File_From_File_Descriptor`.
+- **Domain File Provider phải được người dùng bật** trong Cài đặt > Cài đặt chung > Mục đăng nhập & Tiện ích mở rộng > File Providers. Chưa bật thì fileproviderd báo "Sync is not enabled" (-2011).
+- **Bảng ID bị mất** khi có nhiều tiến trình extension cùng ghi file JSON, nên Finder tưởng file đã bị xoá phía điện thoại. Đã chuyển sang SQLite (WAL, `busy_timeout`).
+- **Đổi tên rồi tra theo tên mới thất bại**: `LIBMTP_Set_Object_String` không cập nhật cache object của libmtp trong phiên. Giờ dùng `LIBMTP_Set_File_Name`. `modifyItem` cũng dựng kết quả từ dữ liệu đọc trước khi đổi tên.
+- **Đổi tên thư mục tiếng Việt làm hỏng đường dẫn của file con**: `substr` của SQLite đếm theo code point, còn `String.count` của Swift đếm theo grapheme. Đã sửa, và tên gửi lên điện thoại được chuẩn hoá về NFC.
+- Lỗi trả về cho File Provider chỉ được thuộc domain Cocoa hoặc NSFileProvider; lỗi khác giờ được đổi thành lỗi Cocoa.
+- Đổi cách sinh identifier thì phải xoá domain cũ: tăng `MTTDomainSchema` trong [DomainManager.swift](App/MTT/Service/DomainManager.swift).
+
+### Ghi chú khi phát triển
+
+- Sau mỗi lần build: chép vào `/Applications/MTT.app` rồi khởi động lại (`pkill -x MTT; open /Applications/MTT.app`). App tự chuyển sang chạy dưới launchd.
+- Muốn dùng CLI `mtt` thì phải tạm tắt agent, nếu không launchd sẽ bật lại app và hai bên tranh nhau USB: `launchctl disable gui/$(id -u)/local.mtt.agent; pkill -x MTT`, xong thì `launchctl enable …` và `launchctl kickstart …`.
+- Trong zsh, `log` là lệnh có sẵn của shell: phải gọi `/usr/bin/log show …`.
+
 **Vì sao chọn File Provider thay vì FSKit:** File Provider ổn định hơn, có nhiều tài liệu hơn và hợp với cách MTP hoạt động (tải cả file, không đọc ghi ngẫu nhiên). FSKit chỉ nên xem xét sau nếu thật sự cần một ổ đĩa đúng nghĩa.
 
 ## Giai đoạn 4: Hoàn thiện và phân phối (3–5 ngày)
