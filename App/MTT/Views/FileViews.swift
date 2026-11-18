@@ -13,6 +13,8 @@ struct FileActions {
     var copy: ([RemoteItem]) -> Void
     var cut: ([RemoteItem]) -> Void
     var hasCut: Bool
+    /// Handles a drop onto a folder (nil = the current folder). Returns false if nothing was done.
+    var drop: ([DropItem], RemoteItem?) -> Bool
     /// Pastes clipboard files into the given folder (nil = current folder).
     var paste: (RemoteItem?) -> Void
     var canEdit: Bool
@@ -105,8 +107,17 @@ struct FileTableView: View {
             .width(min: 70, ideal: 120)
         } rows: {
             ForEach(model.visibleItems) { item in
-                TableRow(item)
-                    .draggable(DragPayload(item: item, storageID: storageID, deviceID: deviceID))
+                if item.isFolder {
+                    // Folders accept drops: MTT items move here, Finder files are copied here.
+                    TableRow(item)
+                        .draggable(DragPayload(item: item, storageID: storageID, deviceID: deviceID))
+                        .dropDestination(for: DropItem.self) { dropped in
+                            _ = actions.drop(dropped, item)
+                        }
+                } else {
+                    TableRow(item)
+                        .draggable(DragPayload(item: item, storageID: storageID, deviceID: deviceID))
+                }
             }
         }
         .contextMenu(forSelectionType: RemoteItem.ID.self) { ids in
@@ -129,7 +140,8 @@ struct FileGridView: View {
         ScrollView {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 12)], spacing: 14) {
                 ForEach(model.visibleItems) { item in
-                    GridCell(item: item, model: model, isSelected: model.selection.contains(item.id))
+                    GridCell(item: item, model: model, isSelected: model.selection.contains(item.id),
+                             actions: actions)
                         .opacity(model.isCut(item) ? 0.45 : 1)
                         .onTapGesture(count: 2) { actions.open(item) }
                         .simultaneousGesture(TapGesture().onEnded { select(item) })
@@ -161,7 +173,9 @@ private struct GridCell: View {
     let item: RemoteItem
     let model: BrowserModel
     let isSelected: Bool
+    let actions: FileActions
     @State private var thumbnail: NSImage?
+    @State private var isDropTarget = false
 
     var body: some View {
         VStack(spacing: 6) {
@@ -179,7 +193,8 @@ private struct GridCell: View {
                 }
             }
             .frame(width: 100, height: 100)
-            .background(isSelected ? Color.accentColor.opacity(0.18) : .clear, in: RoundedRectangle(cornerRadius: 8))
+            .background(isSelected || isDropTarget ? Color.accentColor.opacity(isDropTarget ? 0.35 : 0.18) : .clear,
+                        in: RoundedRectangle(cornerRadius: 8))
 
             Text(item.name)
                 .font(.callout)
@@ -192,9 +207,27 @@ private struct GridCell: View {
         }
         .frame(width: 116)
         .contentShape(Rectangle())
+        .modifier(FolderDropTarget(item: item, actions: actions, isTargeted: $isDropTarget))
         .task(id: item.id) {
             guard item.mayHaveThumbnail, let device = model.device, let storageID = model.storageID else { return }
             thumbnail = await ThumbnailLoader.shared.image(for: item, storageID: storageID, on: device)
+        }
+    }
+}
+
+/// Lets folder cells accept drops; files ignore it.
+private struct FolderDropTarget: ViewModifier {
+    let item: RemoteItem
+    let actions: FileActions
+    @Binding var isTargeted: Bool
+
+    func body(content: Content) -> some View {
+        if item.isFolder {
+            content.dropDestination(for: DropItem.self) { dropped, _ in
+                actions.drop(dropped, item)
+            } isTargeted: { isTargeted = $0 }
+        } else {
+            content
         }
     }
 }

@@ -3,14 +3,25 @@ import Foundation
 import MTPKit
 import UniformTypeIdentifiers
 
-/// What gets dragged out of the browser. The file is only copied off the phone
-/// when the drop target (e.g. Finder) asks for it.
-struct DragPayload: Transferable, Sendable {
+extension UTType {
+    /// An item being dragged inside MTT (declared in Info.plist).
+    static let mttItem = UTType(exportedAs: "local.mtt.item")
+}
+
+/// What gets dragged out of the browser.
+///
+/// Inside MTT the drop target reads the `local.mtt.item` representation (just
+/// the path) and moves the item on the phone. Other apps like Finder only know
+/// the file representations; the file is copied off the phone when they ask.
+struct DragPayload: Transferable, Sendable, Codable {
     let item: RemoteItem
     let storageID: UInt32
     let deviceID: String
 
     static var transferRepresentation: some TransferRepresentation {
+        // First, so drops inside MTT pick it up without copying anything.
+        CodableRepresentation(contentType: .mttItem)
+
         // Without suggestedFileName, Finder names the dropped file after the
         // content type ("data", no extension).
         FileRepresentation(exportedContentType: .folder) { payload in
@@ -29,6 +40,19 @@ struct DragPayload: Transferable, Sendable {
     /// Copies the item into a fresh temp folder (keeping its name) and returns it.
     func fetch() async throws -> URL {
         try await DragExport.fetch(self)
+    }
+}
+
+/// What can be dropped on the browser: an item dragged inside MTT, or a file
+/// from Finder (or any app that provides file URLs).
+enum DropItem: Transferable, Sendable {
+    case remote(DragPayload)
+    case file(URL)
+
+    static var transferRepresentation: some TransferRepresentation {
+        // Import-only. Order matters: prefer the MTT item when both are offered.
+        ProxyRepresentation(importing: { (payload: DragPayload) in DropItem.remote(payload) })
+        ProxyRepresentation(importing: { (url: URL) in DropItem.file(url) })
     }
 }
 

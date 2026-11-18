@@ -24,5 +24,18 @@
 	<string>public.app-category.utilities</string>
 	<key>MTTAppGroup</key>
 	<string>$(MTT_APP_GROUP)</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>MTT phone item</string>
+			<key>UTTypeIdentifier</key>
+			<string>local.mtt.item</string>
+		</dict>
+	</array>
 </dict>
 </plist>

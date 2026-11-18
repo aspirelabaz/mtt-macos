@@ -46,6 +46,11 @@ targets:
         CFBundleDisplayName: MTT
         LSApplicationCategoryType: public.app-category.utilities
         MTTAppGroup: $(MTT_APP_GROUP)
+        # Drag type for moving items inside the browser (UTType.mttItem).
+        UTExportedTypeDeclarations:
+          - UTTypeIdentifier: local.mtt.item
+            UTTypeDescription: MTT phone item
+            UTTypeConformsTo: [public.data]
     entitlements:
       path: MTT/MTT.entitlements
       properties:

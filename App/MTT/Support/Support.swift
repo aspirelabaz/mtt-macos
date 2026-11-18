@@ -23,7 +23,7 @@ enum Fmt {
 
 /// A file or folder on the phone. The path is the stable identity: MTP object
 /// IDs can change after a reconnect, so every operation re-resolves the path.
-struct RemoteItem: Identifiable, Hashable, Sendable {
+struct RemoteItem: Identifiable, Hashable, Sendable, Codable {
     let entry: MTPEntry
     /// Full path from the storage root, including this item's name.
     let path: [String]

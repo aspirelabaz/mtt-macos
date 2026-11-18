@@ -103,9 +103,8 @@ struct BrowserView: View {
                 .onCommand(#selector(NSText.paste(_:))) { paste(into: nil) }
                 overlay(device)
             }
-            .dropDestination(for: URL.self) { urls, _ in
-                upload(urls)
-                return true
+            .dropDestination(for: DropItem.self) { dropped, _ in
+                handleDrop(dropped, onto: nil)
             } isTargeted: { isDropTargeted = $0 }
             .overlay {
                 if isDropTargeted {
@@ -218,9 +217,44 @@ struct BrowserView: View {
             copy: copy,
             cut: cut,
             hasCut: model.activeCut != nil,
+            drop: handleDrop,
             paste: paste,
             canEdit: canEdit
         )
+    }
+
+    /// A drop on a folder (or the current folder when `folder` is nil): items
+    /// dragged inside MTT are moved on the phone, files from Finder are copied up.
+    private func handleDrop(_ dropped: [DropItem], onto folder: RemoteItem?) -> Bool {
+        guard canEdit, let device = model.device, let s = model.storageID else { return false }
+        let destination = folder?.path ?? model.path
+        var files: [URL] = []
+        var moves: [RemoteItem] = []
+        for d in dropped {
+            switch d {
+            case .file(let url):
+                files.append(url)
+            case .remote(let p):
+                guard p.deviceID == device.id, p.storageID == s else {
+                    alertMessage = "Chưa hỗ trợ kéo giữa hai điện thoại hoặc hai bộ nhớ khác nhau."
+                    return false
+                }
+                // Dropping a folder onto itself, or an item where it already is: nothing to do.
+                if p.item.path == destination || Array(p.item.path.dropLast()) == destination { continue }
+                moves.append(p.item)
+            }
+        }
+        if !moves.isEmpty {
+            Task {
+                do { try await device.move(storageID: s, items: moves, to: destination) }
+                catch { alertMessage = describe(error) }
+            }
+        }
+        if !files.isEmpty {
+            showTransfers = true
+            Task { try? await transfers.upload(files, storageID: s, to: destination, on: device) }
+        }
+        return !moves.isEmpty || !files.isEmpty
     }
 
     /// Marks items to be moved by the next Paste. Takes over the clipboard so a
