@@ -17,6 +17,27 @@ final class BrowserModel {
     var selection = Set<RemoteItem.ID>()
     var search = ""
     var viewMode: ViewMode = .list
+
+    /// Items marked with Cut (⌘X), waiting for Paste. Only valid while the
+    /// clipboard hasn't changed since (copying something else cancels it).
+    struct CutState {
+        let deviceID: String
+        let storageID: UInt32
+        let items: [RemoteItem]
+        let pasteboardChange: Int
+    }
+    var cut: CutState?
+
+    /// The pending cut, if it still applies to this phone/storage and the clipboard.
+    var activeCut: CutState? {
+        guard let cut, cut.deviceID == deviceID, cut.storageID == storageID,
+              cut.pasteboardChange == NSPasteboard.general.changeCount else { return nil }
+        return cut
+    }
+
+    func isCut(_ item: RemoteItem) -> Bool {
+        activeCut?.items.contains { $0.path == item.path } == true
+    }
     var sortOrder = [KeyPathComparator(\RemoteItem.name, comparator: .localizedStandard)]
 
     private var back: [[String]] = []

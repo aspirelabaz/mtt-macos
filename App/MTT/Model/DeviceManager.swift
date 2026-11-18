@@ -148,6 +148,27 @@ final class ConnectedDevice: Identifiable {
         changeCounter += 1
     }
 
+    /// Moves items into the folder at `destination` on the phone itself (MTP
+    /// MoveObject: nothing is copied through the Mac).
+    func move(storageID: UInt32, items: [RemoteItem], to destination: [String]) async throws {
+        try await run { dev, resolver in
+            let parentID = try resolver.folderID(dev, storageID: storageID, path: destination)
+            var taken = Set(try dev.list(storageID: storageID, folderID: parentID).map(\.name))
+            for item in items {
+                if Array(item.path.dropLast()) == destination { continue }  // already there
+                if destination.starts(with: item.path) {
+                    throw MTPError.operationFailed("Di chuyển", ["không thể chuyển thư mục \"\(item.name)\" vào chính nó"])
+                }
+                if taken.contains(item.name) { throw MTPError.alreadyExists(pathString(destination + [item.name])) }
+                let current = try resolver.entry(dev, storageID: storageID, path: item.path)
+                try dev.move(id: current.id, storageID: storageID, toFolderID: parentID)
+                taken.insert(item.name)
+            }
+            resolver.invalidate()
+        }
+        changeCounter += 1
+    }
+
     func delete(storageID: UInt32, items: [RemoteItem]) async throws {
         try await run { dev, resolver in
             for item in items {

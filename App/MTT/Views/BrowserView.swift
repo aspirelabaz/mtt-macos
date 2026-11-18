@@ -99,6 +99,7 @@ struct BrowserView: View {
                 // Edit > Copy / Paste (⌘C / ⌘V) while the file list has focus; the
                 // search field keeps normal text copy/paste.
                 .onCommand(#selector(NSText.copy(_:))) { copy(model.selectedItems) }
+                .onCommand(#selector(NSText.cut(_:))) { cut(model.selectedItems) }
                 .onCommand(#selector(NSText.paste(_:))) { paste(into: nil) }
                 overlay(device)
             }
@@ -215,9 +216,21 @@ struct BrowserView: View {
             newFolder: askNewFolder,
             refresh: { model.reload() },
             copy: copy,
+            cut: cut,
+            hasCut: model.activeCut != nil,
             paste: paste,
             canEdit: canEdit
         )
+    }
+
+    /// Marks items to be moved by the next Paste. Takes over the clipboard so a
+    /// stale Finder copy isn't pasted instead; copying anything else cancels it.
+    private func cut(_ items: [RemoteItem]) {
+        guard canEdit, !items.isEmpty, let d = model.deviceID, let s = model.storageID else { return }
+        let pb = NSPasteboard.general
+        pb.clearContents()
+        pb.setString(items.map(\.name).joined(separator: "\n"), forType: .string)
+        model.cut = BrowserModel.CutState(deviceID: d, storageID: s, items: items, pasteboardChange: pb.changeCount)
     }
 
     private func copy(_ items: [RemoteItem]) {
@@ -228,6 +241,16 @@ struct BrowserView: View {
 
     /// Uploads the clipboard's files into `folder` (or the current folder).
     private func paste(into folder: RemoteItem?) {
+        // A pending Cut: move on the phone.
+        if let pending = model.activeCut, canEdit, let device = model.device {
+            let destination = folder?.path ?? model.path
+            model.cut = nil
+            Task {
+                do { try await device.move(storageID: pending.storageID, items: pending.items, to: destination) }
+                catch { alertMessage = describe(error) }
+            }
+            return
+        }
         let urls = TransferManager.pasteboardFileURLs()
         guard canEdit, !urls.isEmpty, let device = model.device, let s = model.storageID else { return }
         let path = folder?.path ?? model.path

@@ -11,6 +11,8 @@ struct FileActions {
     var newFolder: () -> Void
     var refresh: () -> Void
     var copy: ([RemoteItem]) -> Void
+    var cut: ([RemoteItem]) -> Void
+    var hasCut: Bool
     /// Pastes clipboard files into the given folder (nil = current folder).
     var paste: (RemoteItem?) -> Void
     var canEdit: Bool
@@ -23,7 +25,7 @@ struct ItemContextMenu: View {
     let actions: FileActions
 
     var body: some View {
-        let canPaste = actions.canEdit && TransferManager.canPaste
+        let canPaste = actions.canEdit && (actions.hasCut || TransferManager.canPaste)
         if items.isEmpty {
             Button("Dán") { actions.paste(nil) }
                 .disabled(!canPaste)
@@ -36,6 +38,8 @@ struct ItemContextMenu: View {
                 Button(items[0].isFolder ? "Mở" : "Mở bằng app mặc định") { actions.open(items[0]) }
                 Divider()
             }
+            Button("Cắt") { actions.cut(items) }
+                .disabled(!actions.canEdit)
             Button("Sao chép") { actions.copy(items) }
             if items.count == 1, items[0].isFolder {
                 Button("Dán vào \"\(items[0].name)\"") { actions.paste(items[0]) }
@@ -76,6 +80,7 @@ struct FileTableView: View {
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
+                .opacity(model.isCut(item) ? 0.45 : 1)
             }
             .width(min: 180, ideal: 320)
 
@@ -125,6 +130,7 @@ struct FileGridView: View {
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 116, maximum: 150), spacing: 12)], spacing: 14) {
                 ForEach(model.visibleItems) { item in
                     GridCell(item: item, model: model, isSelected: model.selection.contains(item.id))
+                        .opacity(model.isCut(item) ? 0.45 : 1)
                         .onTapGesture(count: 2) { actions.open(item) }
                         .simultaneousGesture(TapGesture().onEnded { select(item) })
                         .contextMenu {

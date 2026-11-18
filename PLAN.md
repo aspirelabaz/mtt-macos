@@ -213,7 +213,10 @@ App chỉ dùng cá nhân, nên bỏ phần notarize / DMG. Người dùng đã 
 - [x] **Finder: di chuyển file và thư mục giữa các thư mục** (MTP MoveObject), đã thử trên Pixel
 - [x] **Finder: tiến độ theo byte** khi chép vào/ra, truyền bằng cơ chế `Progress` của NSXPCConnection; nút huỷ của Finder huỷ luôn lượt truyền. Log xác nhận progress đã được gắn
 
-Còn để sau: tự build lại libmtp để rút ngắn `USB_START_TIMEOUT`; cắt / dán (di chuyển) trong cửa sổ app.
+- [x] **Tự build lại libmtp từ mã nguồn, có 2 bản vá** ([Vendor/libmtp/patches](Vendor/libmtp/patches/libmtp-1.1.23-mtt.patch), build lại bằng [scripts/build-libmtp.sh](scripts/build-libmtp.sh)):
+  - `USB_START_TIMEOUT` từ 5 giây xuống 1,5 giây: huỷ khi còn nhiều dữ liệu chỉ còn **khoảng 6 giây** (trước 10,4 giây, ban đầu 12,9 giây)
+  - bỏ cờ reset USB khi đóng kết nối cho máy Android ngay trong mã nguồn
+- [x] **Cắt / Dán trong cửa sổ app** (⌘X / ⌘V hoặc chuột phải): di chuyển ngay trên điện thoại bằng MoveObject, mục đã cắt hiện mờ. Nếu sau đó clipboard đổi (sao chép thứ khác) thì lệnh cắt bị bỏ.
 
 ---
 
