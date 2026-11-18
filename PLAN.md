@@ -174,6 +174,14 @@ Thiết kế đã chọn (khác bản phác thảo ban đầu một chút):
 - Lỗi trả về cho File Provider chỉ được thuộc domain Cocoa hoặc NSFileProvider; lỗi khác giờ được đổi thành lỗi Cocoa.
 - Đổi cách sinh identifier thì phải xoá domain cũ: tăng `MTTDomainSchema` trong [DomainManager.swift](App/MTT/Service/DomainManager.swift).
 
+- **`ptpcamerad` (Ảnh / Image Capture) chiếm điện thoại Samsung khi cắm lại.** Samsung khai báo interface MTP là loại "still image", nên macOS tự gắn vào, và libmtp không chiếm được. Mỗi lần mở thất bại còn để rò một kết nối USB bên trong libmtp. Cách xử lý:
+  - App phát hiện việc này qua IOKit và có nút "Giải phóng". Nút này tắt `ptpcamerad`: gửi SIGTERM, nếu sau nửa giây vẫn còn thì gửi SIGKILL (nó bỏ qua SIGTERM). Sau đó app khởi động lại để dọn các kết nối bị rò.
+  - Có tuỳ chọn tự làm việc này trước lần mở đầu tiên mỗi khi cắm máy.
+  - macOS bật lại `ptpcamerad` ngay, nhưng nó không chiếm được vì MTT đã giữ máy.
+- **Kéo file ra Finder thành file "data" không có đuôi**: thiếu `.suggestedFileName` trong `Transferable`. Đã sửa.
+
+**Giai đoạn 3 hoàn thành (2026-11-18).** Người dùng đã thử trên Finder: duyệt, chép vào/ra, rút cáp và cắm lại.
+
 ### Ghi chú khi phát triển
 
 - Sau mỗi lần build: chép vào `/Applications/MTT.app` rồi khởi động lại (`pkill -x MTT; open /Applications/MTT.app`). App tự chuyển sang chạy dưới launchd.
