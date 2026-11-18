@@ -91,13 +91,20 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
                   reply: @escaping (NSError?) -> Void) {
         let r = logged("download", pathString(path), reply)
         let handle = Reply(call: file)  // keeps the descriptor open until we're done
+        let hasCallerProgress = Progress.current() != nil
+        let progress = Reply(call: Progress(totalUnitCount: 0))  // child of the caller's progress
+        serviceLog.info("download \(pathString(path), privacy: .public): caller progress attached=\(hasCallerProgress)")
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
                 try await device.run { dev, resolver in
                     let e = try resolver.entry(dev, storageID: storageID, path: path)
                     guard !e.isFolder else { throw MTPError.notAFolder(pathString(path)) }
-                    try dev.download(id: e.id, toFileDescriptor: handle.call.fileDescriptor)
+                    try dev.download(id: e.id, toFileDescriptor: handle.call.fileDescriptor) { done, total in
+                        progress.call.totalUnitCount = Int64(total)
+                        progress.call.completedUnitCount = Int64(done)
+                        return !progress.call.isCancelled  // Finder's cancel button
+                    }
                 }
                 r.call(nil)
             } catch {
@@ -111,6 +118,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
                 replaceExisting: Bool, reply: @escaping (Data?, NSError?) -> Void) {
         let r = logged("upload", pathString(parentPath + [name]), reply)
         let handle = Reply(call: file)
+        let progress = Reply(call: Progress(totalUnitCount: 0))  // child of the caller's progress
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -126,7 +134,11 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
                         }
                     }
                     let new = try dev.upload(fileDescriptor: handle.call.fileDescriptor, name: finalName,
-                                             storageID: storageID, parentID: parentID)
+                                             storageID: storageID, parentID: parentID) { done, total in
+                        progress.call.totalUnitCount = Int64(total)
+                        progress.call.completedUnitCount = Int64(done)
+                        return !progress.call.isCancelled
+                    }
                     resolver.invalidate()
                     return new
                 }
@@ -195,6 +207,33 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
                 try await device.run { dev, resolver in
                     let e = try resolver.entry(dev, storageID: storageID, path: path)
                     try dev.delete(id: e.id)
+                    resolver.invalidate()
+                }
+                device.changeCounter += 1
+                r.call(nil)
+            } catch {
+                r.call(ServiceExport.nsError(error))
+            }
+        }
+    }
+
+    func move(serial: String, storageID: UInt32, path: [String], newParentPath: [String],
+              reply: @escaping (NSError?) -> Void) {
+        let r = logged("move", pathString(path) + " -> " + pathString(newParentPath), reply)
+        Task { @MainActor in
+            do {
+                let device = try await ServiceExport.device(serial)
+                try await device.run { dev, resolver in
+                    guard let name = path.last else { throw MTPError.notFound("/") }
+                    if newParentPath.starts(with: path) {
+                        throw MTPError.operationFailed("Move", ["can't move a folder into itself"])
+                    }
+                    let e = try resolver.entry(dev, storageID: storageID, path: path)
+                    let parentID = try resolver.folderID(dev, storageID: storageID, path: newParentPath)
+                    if try dev.list(storageID: storageID, folderID: parentID).contains(where: { $0.name == name }) {
+                        throw MTPError.alreadyExists(pathString(newParentPath + [name]))
+                    }
+                    try dev.move(id: e.id, storageID: storageID, toFolderID: parentID)
                     resolver.invalidate()
                 }
                 device.changeCounter += 1

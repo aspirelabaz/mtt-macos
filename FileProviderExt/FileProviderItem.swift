@@ -38,7 +38,7 @@ final class FileProviderItem: NSObject, NSFileProviderItem {
         var caps: NSFileProviderItemCapabilities = [.allowsReading]
         if entry.isFolder { caps.insert(.allowsContentEnumerating) }
         if !readOnly && itemIdentifier != .rootContainer {
-            caps.formUnion([.allowsDeleting, .allowsRenaming])
+            caps.formUnion([.allowsDeleting, .allowsRenaming, .allowsReparenting])
             if !entry.isFolder { caps.insert(.allowsWriting) }
         }
         if !readOnly && entry.isFolder { caps.insert(.allowsAddingSubItems) }

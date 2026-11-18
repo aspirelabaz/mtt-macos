@@ -28,7 +28,10 @@ final class ServiceClient {
     }
 
     /// Calls the service; `body` gets the proxy and a completion to call once.
-    private func call<T>(_ body: @escaping (MTTServiceXPC, @escaping (Result<T, Error>) -> Void) -> Void) async throws -> T {
+    /// With `progress`, it is made current around the call so the service's
+    /// own Progress becomes its child (NSXPCConnection forwards updates).
+    private func call<T>(progress: Progress? = nil,
+                         _ body: @escaping (MTTServiceXPC, @escaping (Result<T, Error>) -> Void) -> Void) async throws -> T {
         try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<T, Error>) in
             let once = Once(continuation)
             let proxy = currentConnection().remoteObjectProxyWithErrorHandler { error in
@@ -38,7 +41,9 @@ final class ServiceClient {
                 once.finish(.failure(NSFileProviderError(.serverUnreachable)))
                 return
             }
+            progress?.becomeCurrent(withPendingUnitCount: progress?.totalUnitCount ?? 0)
             body(service) { once.finish($0) }
+            progress?.resignCurrent()
         }
     }
 
@@ -66,8 +71,9 @@ final class ServiceClient {
         }
     }
 
-    func download(serial: String, storageID: UInt32, path: [String], into file: FileHandle) async throws {
-        try await call { (s, done: @escaping (Result<Void, Error>) -> Void) in
+    func download(serial: String, storageID: UInt32, path: [String], into file: FileHandle,
+                  progress: Progress? = nil) async throws {
+        try await call(progress: progress) { (s, done: @escaping (Result<Void, Error>) -> Void) in
             s.download(serial: serial, storageID: storageID, path: path, file: file) { error in
                 done(error.map { .failure($0) } ?? .success(()))
             }
@@ -75,8 +81,8 @@ final class ServiceClient {
     }
 
     func upload(serial: String, storageID: UInt32, parentPath: [String], name: String,
-                from file: FileHandle, replaceExisting: Bool) async throws -> EntryDTO {
-        try await call { s, done in
+                from file: FileHandle, replaceExisting: Bool, progress: Progress? = nil) async throws -> EntryDTO {
+        try await call(progress: progress) { s, done in
             s.upload(serial: serial, storageID: storageID, parentPath: parentPath, name: name,
                      file: file, replaceExisting: replaceExisting) { data, error in
                 done(Self.decode(EntryDTO.self, data, error))
@@ -103,6 +109,14 @@ final class ServiceClient {
     func delete(serial: String, storageID: UInt32, path: [String]) async throws {
         try await call { (s, done: @escaping (Result<Void, Error>) -> Void) in
             s.delete(serial: serial, storageID: storageID, path: path) { error in
+                done(error.map { .failure($0) } ?? .success(()))
+            }
+        }
+    }
+
+    func move(serial: String, storageID: UInt32, path: [String], newParentPath: [String]) async throws {
+        try await call { (s, done: @escaping (Result<Void, Error>) -> Void) in
+            s.move(serial: serial, storageID: storageID, path: path, newParentPath: newParentPath) { error in
                 done(error.map { .failure($0) } ?? .success(()))
             }
         }

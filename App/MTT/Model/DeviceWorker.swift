@@ -70,21 +70,33 @@ final class PathResolver: @unchecked Sendable {
         return folder.id
     }
 
-    /// Children of the folder at `path`. Retries once from scratch if a cached ID went stale.
+    /// Children of the folder at `path`. Retries once from scratch if a cached ID
+    /// went stale; if that fails too (and the phone wasn't unplugged), the session
+    /// is assumed stuck: reconnect and try a last time.
     func list(_ dev: MTPDevice, storageID: UInt32, path: [String]) throws -> [MTPEntry] {
-        do {
+        func attempt() throws -> [MTPEntry] {
             let id = try folderID(dev, storageID: storageID, path: path)
             let children = try dev.list(storageID: storageID, folderID: id)
             remember(dev, storageID, parent: path, children: children)
             return children
+        }
+        do {
+            return try attempt()
         } catch MTPError.deviceGone {
             throw MTPError.deviceGone
         } catch {
             invalidate()
-            let id = try folderID(dev, storageID: storageID, path: path)
-            let children = try dev.list(storageID: storageID, folderID: id)
-            remember(dev, storageID, parent: path, children: children)
-            return children
+            do {
+                return try attempt()
+            } catch MTPError.deviceGone {
+                throw MTPError.deviceGone
+            } catch MTPError.notFound(let p) {
+                throw MTPError.notFound(p)  // a real answer, not a stuck session
+            } catch {
+                try dev.reconnect()
+                invalidate()
+                return try attempt()
+            }
         }
     }
 

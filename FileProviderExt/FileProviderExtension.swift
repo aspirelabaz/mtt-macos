@@ -72,7 +72,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
             } catch {
                 completionHandler(nil, fileProviderError(error))
             }
-            progress.completedUnitCount = 1
+            progress.completedUnitCount = progress.totalUnitCount
         }
         return progress
     }
@@ -82,7 +82,8 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
     func fetchContents(for itemIdentifier: NSFileProviderItemIdentifier, version requestedVersion: NSFileProviderItemVersion?,
                        request: NSFileProviderRequest,
                        completionHandler: @escaping (URL?, NSFileProviderItem?, Error?) -> Void) -> Progress {
-        let progress = Progress(totalUnitCount: 1)
+        // Units are per mille; the app's byte progress is attached as a child.
+        let progress = Progress(totalUnitCount: 1000)
         let started = Date()
         Task {
             do {
@@ -97,7 +98,8 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 }
                 let handle = try FileHandle(forWritingTo: dest)
                 do {
-                    try await client.download(serial: serial, storageID: storageID, path: path, into: handle)
+                    try await client.download(serial: serial, storageID: storageID, path: path, into: handle,
+                                              progress: progress)
                     try? handle.close()
                 } catch {
                     try? handle.close()
@@ -110,7 +112,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 fpLog.error("fetch \(itemIdentifier.rawValue, privacy: .public) failed after \(elapsed(since: started), privacy: .public): \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, nil, fileProviderError(error))
             }
-            progress.completedUnitCount = 1
+            progress.completedUnitCount = progress.totalUnitCount
         }
         return progress
     }
@@ -120,7 +122,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
     func createItem(basedOn itemTemplate: NSFileProviderItem, fields: NSFileProviderItemFields, contents url: URL?,
                     options: NSFileProviderCreateItemOptions = [], request: NSFileProviderRequest,
                     completionHandler: @escaping (NSFileProviderItem?, NSFileProviderItemFields, Bool, Error?) -> Void) -> Progress {
-        let progress = Progress(totalUnitCount: 1)
+        let progress = Progress(totalUnitCount: 1000)
         Task {
             do {
                 if readOnly { throw CocoaError(.fileWriteNoPermission) }
@@ -137,7 +139,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                         throw CocoaError(.featureUnsupported)
                     }
                     entry = try await upload(url, parentPath: parentPath, name: name,
-                                             replace: options.contains(.mayAlreadyExist))
+                                             replace: options.contains(.mayAlreadyExist), progress: progress)
                 } else {
                     throw CocoaError(.featureUnsupported)
                 }
@@ -147,7 +149,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 fpLog.error("create \(itemTemplate.filename, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, [], false, fileProviderError(error))
             }
-            progress.completedUnitCount = 1
+            progress.completedUnitCount = progress.totalUnitCount
         }
         return progress
     }
@@ -156,20 +158,24 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                     changedFields: NSFileProviderItemFields, contents newContents: URL?,
                     options: NSFileProviderModifyItemOptions = [], request: NSFileProviderRequest,
                     completionHandler: @escaping (NSFileProviderItem?, NSFileProviderItemFields, Bool, Error?) -> Void) -> Progress {
-        let progress = Progress(totalUnitCount: 1)
+        let progress = Progress(totalUnitCount: 1000)
         Task {
             do {
                 if readOnly { throw CocoaError(.fileWriteNoPermission) }
                 var path = try requirePath(item.itemIdentifier)
-
-                // Moving between folders isn't supported over MTP here.
-                if changedFields.contains(.parentItemIdentifier) {
-                    let newParent = try requirePath(item.parentItemIdentifier)
-                    if newParent != Array(path.dropLast()) { throw CocoaError(.featureUnsupported) }
-                }
                 // Read the current metadata first and build the result from it, rather
                 // than looking the item up again right after changing it.
                 var entry = try await client.entry(serial: serial, storageID: storageID, path: path)
+                // Moved to another folder (MTP MoveObject; same storage = same domain).
+                if changedFields.contains(.parentItemIdentifier) {
+                    let newParent = try requirePath(item.parentItemIdentifier)
+                    if newParent != Array(path.dropLast()) {
+                        try await client.move(serial: serial, storageID: storageID, path: path, newParentPath: newParent)
+                        let newPath = newParent + [path.last ?? entry.name]
+                        ids.move(from: path, to: newPath)
+                        path = newPath
+                    }
+                }
                 let newName = phoneName(item.filename)
                 if changedFields.contains(.filename), newName != path.last {
                     try await client.rename(serial: serial, storageID: storageID, path: path, newName: newName)
@@ -180,7 +186,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 }
                 if changedFields.contains(.contents), let newContents {
                     let uploaded = try await upload(newContents, parentPath: Array(path.dropLast()),
-                                                    name: path.last ?? item.filename, replace: true)
+                                                    name: path.last ?? item.filename, replace: true, progress: progress)
                     entry.size = uploaded.size
                     entry.modified = uploaded.modified
                 }
@@ -191,7 +197,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 fpLog.error("modify \(item.filename, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, [], false, fileProviderError(error))
             }
-            progress.completedUnitCount = 1
+            progress.completedUnitCount = progress.totalUnitCount
         }
         return progress
     }
@@ -216,17 +222,18 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 fpLog.error("delete \(identifier.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(fileProviderError(error))
             }
-            progress.completedUnitCount = 1
+            progress.completedUnitCount = progress.totalUnitCount
         }
         return progress
     }
 
     /// The app can't open the system's staging file by path, so hand it an open descriptor.
-    private func upload(_ url: URL, parentPath: [String], name: String, replace: Bool) async throws -> EntryDTO {
+    private func upload(_ url: URL, parentPath: [String], name: String, replace: Bool,
+                        progress: Progress? = nil) async throws -> EntryDTO {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         return try await client.upload(serial: serial, storageID: storageID, parentPath: parentPath,
-                                       name: name, from: handle, replaceExisting: replace)
+                                       name: name, from: handle, replaceExisting: replace, progress: progress)
     }
 
     /// Names go to the phone in NFC: Finder may hand over decomposed (NFD) text,

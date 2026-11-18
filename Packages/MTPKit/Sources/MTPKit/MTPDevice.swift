@@ -1,6 +1,7 @@
 import CLibMTP
 import CMTPShim
 import Foundation
+import Synchronization
 
 /// Progress callback: (bytesDone, bytesTotal) -> keep going? Return false to cancel.
 public typealias MTPProgress = (UInt64, UInt64) -> Bool
@@ -24,16 +25,35 @@ public final class MTPDevice: @unchecked Sendable {
     /// generation may no longer be valid.
     public private(set) var sessionGeneration = 0
 
-    private var handle: UnsafeMutablePointer<LIBMTP_mtpdevice_t>?
+    private var handle: UnsafeMutablePointer<LIBMTP_mtpdevice_t>? {
+        get { handleLock.withLock { _handle } }
+        set { handleLock.withLock { _handle = newValue } }
+    }
+    private var _handle: UnsafeMutablePointer<LIBMTP_mtpdevice_t>?
+    /// Serializes libmtp calls (held for a whole operation).
     private let lock = NSRecursiveLock()
+    /// Guards `_handle` only, so abortPendingIO() can run while an operation
+    /// holds `lock` without racing a release of the handle.
+    private let handleLock = NSLock()
+    /// Called before each attempt to reopen the phone in `reconnect()`, e.g. to
+    /// free it from another process that grabbed it while it was released.
+    public var beforeReopen: (@Sendable () -> Void)?
+
+    /// Set by abortPendingIO(): the phone is gone, don't try to reconnect.
+    private let aborting = Atomic<Bool>(false)
+
+    /// Cancelling a transfer with this much (or less) left just lets it finish
+    /// and discards the result: aborting mid-transfer jams Android's USB pipe
+    /// and costs a ~12 s reset (libmtp's first reopen attempt waits 5 s).
+    public static let drainLimit: UInt64 = 48 * 1024 * 1024
 
     public init(raw: RawDeviceInfo) throws {
         MTP.initialize()
         self.raw = raw
         let (h, resetOff) = try MTPDevice.open(raw)
-        handle = h
-        resetOnCloseDisabled = resetOff
         info = MTPDevice.readInfo(h)
+        _handle = h
+        resetOnCloseDisabled = resetOff
     }
 
     deinit { close() }
@@ -41,9 +61,23 @@ public final class MTPDevice: @unchecked Sendable {
     /// Releases the USB connection. Safe to call more than once.
     public func close() {
         lock.lock(); defer { lock.unlock() }
-        if let h = handle { LIBMTP_Release_Device(h) }
-        handle = nil
+        handleLock.lock()
+        if let h = _handle { LIBMTP_Release_Device(h) }
+        _handle = nil
+        handleLock.unlock()
         isAlive = false
+    }
+
+    /// Call when the phone has left USB: makes the operation in progress (if any)
+    /// fail within a fraction of a second instead of waiting for libmtp's long
+    /// timeouts (~10 s), and stops it from trying to reconnect. Thread-safe and
+    /// doesn't wait for the running operation.
+    public func abortPendingIO() {
+        aborting.store(true, ordering: .relaxed)
+        handleLock.lock(); defer { handleLock.unlock() }
+        if let h = _handle {
+            _ = mtt_set_usb_timeout(h, raw.vendorID, raw.productID, 200)
+        }
     }
 
     /// Drops the session with a USB reset and opens a fresh one on the same phone.
@@ -61,11 +95,14 @@ public final class MTPDevice: @unchecked Sendable {
             // (Tried keeping clear-stall: slower, and a later listing failed once.)
             // The next open's first OpenSession still times out (~5 s) and libmtp
             // recovers by itself on its second try; whole recovery is ~12 s.
-            _ = mtt_set_usb_timeout(h, raw.vendorID, raw.productID, 1000)
+            _ = mtt_set_usb_timeout(h, raw.vendorID, raw.productID, 300)
             _ = mtt_update_device_flags(h, raw.vendorID, raw.productID,
                                         UInt32(MTT_FLAG_FORCE_RESET_ON_CLOSE | MTT_FLAG_NO_RELEASE_INTERFACE), 0)
             mtpTrace("reconnect: releasing")
-            LIBMTP_Release_Device(h)
+            handleLock.withLock {
+                LIBMTP_Release_Device(h)
+                _handle = nil
+            }
             mtpTrace("reconnect: released")
         }
         handle = nil
@@ -95,6 +132,7 @@ public final class MTPDevice: @unchecked Sendable {
                 mtpTrace("reconnect: not on bus yet")
                 continue
             }
+            beforeReopen?()
             do {
                 mtpTrace("reconnect: opening \(candidate.usbKey)")
                 let (h, resetOff) = try MTPDevice.open(candidate)
@@ -104,10 +142,17 @@ public final class MTPDevice: @unchecked Sendable {
                     LIBMTP_Release_Device(h)  // a different phone of the same model
                     continue
                 }
-                guard LIBMTP_Get_Storage(h, Int32(LIBMTP_STORAGE_SORTBY_NOTSORTED)) == 0 else {
-                    mtpTrace("reconnect: storages failed")
+                // Only count it as reopened if the phone really answers: a session can
+                // open (and even list storages) yet fail every folder listing, e.g.
+                // after ptpcamerad was killed in the middle of its own session.
+                guard MTPDevice.sessionWorks(h) else {
+                    mtpTrace("reconnect: new session doesn't answer, resetting again")
                     LIBMTP_Clear_Errorstack(h)
+                    _ = mtt_set_usb_timeout(h, candidate.vendorID, candidate.productID, 300)
+                    _ = mtt_update_device_flags(h, candidate.vendorID, candidate.productID,
+                                                UInt32(MTT_FLAG_FORCE_RESET_ON_CLOSE | MTT_FLAG_NO_RELEASE_INTERFACE), 0)
                     LIBMTP_Release_Device(h)
+                    Thread.sleep(forTimeInterval: 0.5)
                     continue
                 }
                 mtpTrace("reconnect: reopened")
@@ -124,6 +169,20 @@ public final class MTPDevice: @unchecked Sendable {
             }
         }
         throw lastError
+    }
+
+    /// True if storages can be read and the first storage's root can be listed.
+    private static func sessionWorks(_ h: UnsafeMutablePointer<LIBMTP_mtpdevice_t>) -> Bool {
+        guard LIBMTP_Get_Storage(h, Int32(LIBMTP_STORAGE_SORTBY_NOTSORTED)) == 0,
+              let storage = h.pointee.storage else { return false }
+        let head = LIBMTP_Get_Files_And_Folders(h, storage.pointee.id, MTPRootFolderID)
+        var cur = head
+        while let f = cur {
+            cur = f.pointee.next
+            LIBMTP_destroy_file_t(f)
+        }
+        // NULL with an empty error stack is just an empty storage.
+        return head != nil || LIBMTP_Get_Errorstack(h) == nil
     }
 
     /// Opens a raw device and turns off libmtp's reset-on-close for it.
@@ -256,6 +315,10 @@ public final class MTPDevice: @unchecked Sendable {
                 LIBMTP_Get_File_To_File_Descriptor(h, id, fd, progressTrampoline,
                                                    UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
             }
+            if rc == 0 && box.drained {
+                mtpTrace("download cancelled near the end: finished it and discarded the data")
+                throw MTPError.cancelled  // callers remove the partial file
+            }
             if rc != 0 {
                 mtpTrace("libmtp transfer returned \(rc)")
                 let err = takeErrors(h) ?? ([], false)
@@ -307,6 +370,12 @@ public final class MTPDevice: @unchecked Sendable {
             let rc = withExtendedLifetime(box) {
                 LIBMTP_Send_File_From_File_Descriptor(h, fd, f, progressTrampoline,
                                                       UnsafeRawPointer(Unmanaged.passUnretained(box).toOpaque()))
+            }
+            if rc == 0 && box.drained {
+                mtpTrace("upload cancelled near the end: finished it and deleted the file")
+                if f.pointee.item_id != 0 { _ = LIBMTP_Delete_Object(h, f.pointee.item_id) }
+                LIBMTP_Clear_Errorstack(h)
+                throw MTPError.cancelled
             }
             if rc != 0 {
                 mtpTrace("libmtp transfer returned \(rc)")
@@ -367,6 +436,19 @@ public final class MTPDevice: @unchecked Sendable {
         }
     }
 
+    /// Moves a file or folder into another folder on the same storage.
+    /// (libmtp doesn't update its object cache here, but listings stay right:
+    /// a folder's children are always fetched fresh from the phone.)
+    public func move(id: UInt32, storageID: UInt32, toFolderID parentID: UInt32) throws {
+        try withHandle { h in
+            // libmtp wants 0, not 0xFFFFFFFF, for "storage root" here.
+            let parent = parentID == MTPRootFolderID ? 0 : parentID
+            guard LIBMTP_Move_Object(h, id, storageID, parent) == 0 else {
+                throw classify("Move", takeErrors(h) ?? ([], false))
+            }
+        }
+    }
+
     /// Renames a file or folder in place.
     ///
     /// Uses LIBMTP_Set_File_Name, which also updates libmtp's per-session object
@@ -388,16 +470,21 @@ public final class MTPDevice: @unchecked Sendable {
 
     /// After a cancel, libmtp waits for the phone's final response with Android's
     /// 60 s timeout, but the phone never sends it (cancelling took ~72 s). The
-    /// session is reset right afterwards anyway, so cut the timeout to 1 s first.
+    /// session is reset right afterwards anyway, so cut the timeout first.
     private func shortenTimeoutForCancel(_ h: UnsafeMutablePointer<LIBMTP_mtpdevice_t>) -> () -> Void {
         let vid = raw.vendorID, pid = raw.productID
-        return { _ = mtt_set_usb_timeout(h, vid, pid, 1000) }
+        return { _ = mtt_set_usb_timeout(h, vid, pid, 300) }
     }
 
     /// After a transfer stops midway the session is unusable, so start a new one.
     /// Not when the phone was unplugged: there is nothing to reconnect to.
     private func recoverAfterAbortedTransfer(_ error: MTPError) throws {
         if case .deviceGone = error { return }
+        if aborting.load(ordering: .relaxed) {
+            mtpTrace("transfer aborted because the phone left USB")
+            isAlive = false
+            throw MTPError.deviceGone
+        }
         mtpTrace("transfer aborted: \(error)")
         try reconnect()
     }
@@ -476,6 +563,8 @@ private final class ProgressBox {
     /// Runs inside libmtp just before it starts cancelling.
     let onCancel: () -> Void
     var cancelled = false
+    /// Cancelled close to the end: the transfer is allowed to finish (see drainLimit).
+    var drained = false
     init(_ handler: MTPProgress?, onCancel: @escaping () -> Void) {
         self.handler = handler
         self.onCancel = onCancel
@@ -485,9 +574,14 @@ private final class ProgressBox {
 private let progressTrampoline: LIBMTP_progressfunc_t = { sent, total, ctx in
     guard let ctx else { return 0 }
     let box = Unmanaged<ProgressBox>.fromOpaque(UnsafeMutableRawPointer(mutating: ctx)).takeUnretainedValue()
-    guard let handler = box.handler else { return 0 }
+    guard let handler = box.handler, !box.drained else { return 0 }
     if handler(sent, total) { return 0 }
     box.cancelled = true
+    if total > sent && total - sent <= MTPDevice.drainLimit {
+        mtpTrace("cancel requested at \(sent)/\(total): letting the last \(total - sent) bytes finish")
+        box.drained = true
+        return 0
+    }
     mtpTrace("cancel requested at \(sent)/\(total)")
     box.onCancel()
     return 1

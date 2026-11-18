@@ -97,6 +97,11 @@ public enum MTTServiceError: Int, Sendable {
 /// Phones are addressed by serial number, folders and files by path from the
 /// storage root (MTP object IDs change across sessions). Errors use
 /// `MTTServiceError.domain`.
+///
+/// Progress: download/upload report bytes through NSXPCConnection's progress
+/// propagation. If the caller makes an NSProgress current around the call, the
+/// Progress the service creates during the call becomes its child (and
+/// cancelling the caller's progress cancels the transfer).
 @objc public protocol MTTServiceXPC {
     /// Storages of a connected phone, JSON [StorageDTO].
     func storages(serial: String, reply: @escaping (Data?, NSError?) -> Void)
@@ -125,6 +130,10 @@ public enum MTTServiceError: Int, Sendable {
                 reply: @escaping (NSError?) -> Void)
 
     func delete(serial: String, storageID: UInt32, path: [String], reply: @escaping (NSError?) -> Void)
+
+    /// Moves the item at `path` into the folder `newParentPath` (same storage).
+    func move(serial: String, storageID: UInt32, path: [String], newParentPath: [String],
+              reply: @escaping (NSError?) -> Void)
 }
 
 // MARK: - Logging

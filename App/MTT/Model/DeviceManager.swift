@@ -58,6 +58,13 @@ final class ConnectedDevice: Identifiable {
             }
             do {
                 let device = try await runBlocking { try MTPDevice(raw: raw) }
+                // A reset after a cancelled transfer releases the phone for a moment,
+                // and ptpcamerad grabs it; free it again before each reopen.
+                device.beforeReopen = {
+                    if PTPCameraDaemon.autoRelease, PTPCameraDaemon.holdsMTPInterface() {
+                        PTPCameraDaemon.stop()
+                    }
+                }
                 let worker = DeviceWorker(device: device)
                 let storages = try await worker.run { dev, _ in try dev.storages() }
                 guard state == .connecting else { device.close(); return }
@@ -94,7 +101,10 @@ final class ConnectedDevice: Identifiable {
         do {
             return try await worker.run(body)
         } catch MTPError.deviceGone {
-            if state == .ready { state = .disconnected }
+            if state == .ready {
+                state = .disconnected
+                scheduleRecovery()
+            }
             throw MTPError.deviceGone
         }
     }
@@ -158,12 +168,32 @@ final class ConnectedDevice: Identifiable {
         }
     }
 
+    /// The session died (e.g. a reconnect after a cancel failed) but the phone may
+    /// still be plugged in: if USB detection hasn't removed it shortly after,
+    /// open it again from scratch.
+    private func scheduleRecovery() {
+        Task {
+            try? await Task.sleep(for: .seconds(1.5))
+            guard state == .disconnected,
+                  DeviceManager.shared.devices.contains(where: { $0 === self }) else { return }
+            log.notice("session lost but \(self.name, privacy: .public) is still on USB: reconnecting")
+            if let old = worker {
+                worker = nil
+                Task.detached { _ = try? await old.run { dev, _ in dev.close() } }
+            }
+            await connect()
+        }
+    }
+
     /// Called when the phone leaves USB.
     func markDisconnected() {
         log.notice("disconnected: \(self.name, privacy: .public)")
         state = .disconnected
         let worker = self.worker
         self.worker = nil
+        // Make a transfer stuck on the vanished phone fail now, not after libmtp's
+        // ~10 s timeouts (also unblocks Finder requests queued behind it).
+        worker?.device.abortPendingIO()
         // Closing waits for any running transfer to give up, so do it off the main thread.
         if let worker {
             Task.detached { _ = try? await worker.run { dev, _ in dev.close() } }
