@@ -192,11 +192,28 @@ Thiết kế đã chọn (khác bản phác thảo ban đầu một chút):
 
 ## Giai đoạn 4: Hoàn thiện và phân phối (3–5 ngày)
 
-- [ ] Thử trên nhiều hãng: Samsung, Xiaomi, Pixel, Oppo (mỗi hãng có vài điểm lạ riêng khi chạy MTP)
-- [ ] Đóng gói `libmtp.dylib` và `libusb.dylib` vào trong app. libmtp dùng giấy phép LGPL nên phải link động và ghi rõ giấy phép
-- [ ] Tự chạy khi đăng nhập (`SMAppService`)
-- [ ] Ký app, notarize và đóng gói thành DMG. Bước này cần tài khoản Apple Developer ($99/năm), chỉ cần nếu phát hành cho người khác
-- [ ] Thêm log chẩn đoán để người dùng gửi khi gặp lỗi
+App chỉ dùng cá nhân, nên bỏ phần notarize / DMG. Người dùng đã chọn làm cả 4 việc dưới đây.
+
+- [x] Đã thử trên 2 hãng: Pixel 3 XL và Samsung S25 Edge
+- [x] **Đóng gói libmtp 1.1.23 + libusb 1.0.30 vào app** ([Vendor/libmtp](Vendor/libmtp/README.md)), install name đổi sang `@rpath`, link động (LGPL, có kèm giấy phép). `brew upgrade` không còn ảnh hưởng. Build Release và cài bằng [scripts/install.sh](scripts/install.sh)
+- [x] Tự chạy khi đăng nhập (`SMAppService` agent, đã làm ở Giai đoạn 3)
+- [x] **Log chẩn đoán**:
+  - `os.Logger` với subsystem `local.mtt`, chia nhóm `device`, `transfer`, `service`, `domain`, `agent`, `fileprovider`, `mtp`; mọi yêu cầu XPC đều ghi kèm thời gian xử lý
+  - menu bar có lệnh "Xuất log chẩn đoán…": lưu log 2 giờ gần nhất ra Desktop
+  - đọc tay: `/usr/bin/log show --predicate 'subsystem == "local.mtt"' --info --last 1h`
+- [x] **Huỷ nhanh hơn**:
+  - còn ≤ 48 MB thì nhận hoặc gửi nốt rồi bỏ kết quả: khoảng 1 giây, không phải reset
+  - còn nhiều hơn thì reset với timeout ngắn hơn: khoảng 10 giây (trước đây 12,9 giây). Không xuống thấp hơn được vì lần thử đầu tiên khi mở phiên luôn chờ 5 giây (`USB_START_TIMEOUT`, biên dịch sẵn trong libmtp)
+- [x] **Rút cáp nhanh hơn**: `abortPendingIO()` hạ timeout ngay khi USB báo điện thoại đã rời. *Chưa thử với cáp thật.*
+- [x] **Tự chữa lành**:
+  - khi kết nối lại, phải liệt kê được thư mục gốc mới coi là thành công
+  - lệnh liệt kê vẫn lỗi sau khi thử lại thì tự kết nối lại
+  - nếu kết nối lại vẫn thất bại mà điện thoại còn cắm thì mở lại từ đầu
+  - trước mỗi lần mở lại thì giải phóng điện thoại khỏi `ptpcamerad` (nếu đã bật tuỳ chọn)
+- [x] **Finder: di chuyển file và thư mục giữa các thư mục** (MTP MoveObject), đã thử trên Pixel
+- [x] **Finder: tiến độ theo byte** khi chép vào/ra, truyền bằng cơ chế `Progress` của NSXPCConnection; nút huỷ của Finder huỷ luôn lượt truyền. Log xác nhận progress đã được gắn
+
+Còn để sau: tự build lại libmtp để rút ngắn `USB_START_TIMEOUT`; cắt / dán (di chuyển) trong cửa sổ app.
 
 ---
 
