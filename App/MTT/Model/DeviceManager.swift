@@ -2,6 +2,9 @@ import Foundation
 import MTPKit
 import MTTShared
 import Observation
+import os
+
+private let log = MTTLog.logger("device")
 
 /// One phone plugged in over USB.
 @MainActor @Observable
@@ -42,6 +45,8 @@ final class ConnectedDevice: Identifiable {
         state = .connecting
         blockedByPTPCamera = false
         let raw = self.raw
+        let started = Date()
+        log.notice("connecting \(raw.usbKey, privacy: .public) (\(raw.vendor, privacy: .public) \(raw.product, privacy: .public))")
         var lastError: Error = MTPError.connectionFailed
         for attempt in 0..<4 {
             if attempt > 0 { try? await Task.sleep(for: .seconds(1.5)) }
@@ -61,15 +66,19 @@ final class ConnectedDevice: Identifiable {
                 self.storages = storages
                 self.name = device.info.displayName
                 self.state = .ready
+                log.notice("ready: \(self.name, privacy: .public), \(storages.count) storage(s), resetOnCloseDisabled=\(device.resetOnCloseDisabled) in \(elapsed(since: started), privacy: .public)")
                 return
             } catch {
                 lastError = error
+                log.error("open attempt \(attempt + 1) failed: \(describe(error), privacy: .public)")
                 if PTPCameraDaemon.holdsMTPInterface() && !PTPCameraDaemon.autoRelease {
                     break  // retrying won't help until the user frees it
                 }
             }
         }
+        log.error("could not connect \(raw.usbKey, privacy: .public) after \(elapsed(since: started), privacy: .public)")
         if PTPCameraDaemon.holdsMTPInterface() {
+            log.error("ptpcamerad holds the MTP interface")
             blockedByPTPCamera = true
             state = .failed("macOS (dịch vụ ptpcamerad của Ảnh / Image Capture) đang giữ kết nối với điện thoại.")
         } else {
@@ -151,6 +160,7 @@ final class ConnectedDevice: Identifiable {
 
     /// Called when the phone leaves USB.
     func markDisconnected() {
+        log.notice("disconnected: \(self.name, privacy: .public)")
         state = .disconnected
         let worker = self.worker
         self.worker = nil

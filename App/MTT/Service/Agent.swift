@@ -2,6 +2,9 @@ import AppKit
 import Foundation
 import MTTShared
 import ServiceManagement
+import os
+
+private let log = MTTLog.logger("agent")
 
 /// Runs the app as a launchd agent so the Finder extension can always reach it:
 /// it starts at login, and launchd starts it on demand when the extension
@@ -26,6 +29,7 @@ enum Agent {
     /// Call first thing at launch. If the user started the app by hand, register
     /// the agent and hand over to a launchd-started copy (this one then quits).
     static func bootstrap() {
+        log.notice("launch: launchedByLaunchd=\(launchedByLaunchd) agentStatus=\(service.status.rawValue)")
         guard !disabled, !launchedByLaunchd else { return }
 
         // Set before registering: with RunAtLoad, registering starts the launchd
@@ -35,7 +39,7 @@ enum Agent {
             do {
                 try service.register()
             } catch {
-                NSLog("MTT: registering launch agent failed: \(error)")
+                log.error("registering launch agent failed: \(error.localizedDescription, privacy: .public)")
             }
         }
         guard service.status == .enabled else {
@@ -53,7 +57,7 @@ enum Agent {
         try? service.unregister()
         try? service.register()
         if service.status == .enabled, kickstart() { exit(0) }
-        NSLog("MTT: could not start the launch agent; running without Finder integration")
+        log.error("could not start the launch agent; running without Finder integration")
         UserDefaults.standard.removeObject(forKey: openWindowKey)
     }
 
@@ -67,7 +71,7 @@ enum Agent {
             p.waitUntilExit()
             return p.terminationStatus == 0
         } catch {
-            NSLog("MTT: launchctl kickstart failed: \(error)")
+            log.error("launchctl kickstart failed: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }

@@ -1,7 +1,11 @@
 import AppKit
 import Foundation
 import MTPKit
+import MTTShared
 import Observation
+import os
+
+private let log = MTTLog.logger("transfer")
 
 @MainActor @Observable
 final class TransferJob: Identifiable {
@@ -137,6 +141,8 @@ final class TransferManager {
         jobs.insert(job, at: 0)
         let relay = ProgressRelay(job: job)
         let cancel = job.cancelFlag
+        let started = Date()
+        log.notice("download start: \(title, privacy: .public) -> \(directory.path, privacy: .public)")
 
         do {
             // 1. Plan: expand folders into a file list so progress has a real total.
@@ -193,8 +199,10 @@ final class TransferManager {
             job.bytesDone = job.bytesTotal
             job.resultURL = plan.tops.first
             job.finish(.done)
+            log.notice("download done: \(title, privacy: .public), \(plan.files.count) file(s), \(job.bytesTotal) bytes in \(elapsed(since: started), privacy: .public)")
             return plan.tops
         } catch {
+            log.error("download failed: \(title, privacy: .public) after \(elapsed(since: started), privacy: .public): \(describe(error), privacy: .public)")
             if case MTPError.cancelled = error { job.finish(.cancelled) } else { job.finish(.failed(describe(error))) }
             throw error
         }
@@ -240,6 +248,8 @@ final class TransferManager {
         job.filesTotal = t.0
         job.bytesTotal = t.1
         job.state = .running
+        let started = Date()
+        log.notice("upload start: \(title, privacy: .public) -> \(pathString(path), privacy: .public), \(t.0) file(s), \(t.1) bytes")
 
         do {
             try await device.run { dev, resolver in
@@ -282,7 +292,9 @@ final class TransferManager {
             job.filesDone = job.filesTotal
             job.bytesDone = job.bytesTotal
             job.finish(.done)
+            log.notice("upload done: \(title, privacy: .public) in \(elapsed(since: started), privacy: .public)")
         } catch {
+            log.error("upload failed: \(title, privacy: .public) after \(elapsed(since: started), privacy: .public): \(describe(error), privacy: .public)")
             if case MTPError.cancelled = error { job.finish(.cancelled) } else { job.finish(.failed(describe(error))) }
             device.changeCounter += 1
             throw error

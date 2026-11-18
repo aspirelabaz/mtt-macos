@@ -2,6 +2,9 @@ import FileProvider
 import Foundation
 import MTTShared
 import Observation
+import os
+
+private let log = MTTLog.logger("domain")
 
 /// Keeps one Finder sidebar entry (File Provider domain) per storage of each
 /// connected phone: added when the phone is ready, removed when it's unplugged.
@@ -21,6 +24,7 @@ final class DomainManager {
             // since Finder's cached identifiers would no longer match.
             let schema = 5
             if UserDefaults.standard.integer(forKey: "MTTDomainSchema") != schema {
+                log.notice("domain schema changed: removing all domains")
                 try? await NSFileProviderManager.removeAllDomains()
                 UserDefaults.standard.set(schema, forKey: "MTTDomainSchema")
             }
@@ -83,8 +87,9 @@ final class DomainManager {
             if let existing = domains[w.id], existing.displayName == w.name { continue }
             let domain = NSFileProviderDomain(identifier: NSFileProviderDomainIdentifier(w.id), displayName: w.name)
             domains[w.id] = domain
+            log.notice("adding domain \(w.id, privacy: .public) (\(w.name, privacy: .public))")
             NSFileProviderManager.add(domain) { error in
-                if let error { NSLog("MTT: adding domain \(w.id) failed: \(error)") }
+                if let error { log.error("adding domain \(w.id, privacy: .public) failed: \(error.localizedDescription, privacy: .public)") }
             }
         }
 
@@ -98,8 +103,9 @@ final class DomainManager {
             guard gone && (removeStale || isKnownThisRun(id)) else { continue }
             domains[id] = nil
             seenThisRun.remove(id)
+            log.notice("removing domain \(id, privacy: .public)")
             NSFileProviderManager.remove(domain) { error in
-                if let error { NSLog("MTT: removing domain \(id) failed: \(error)") }
+                if let error { log.error("removing domain \(id, privacy: .public) failed: \(error.localizedDescription, privacy: .public)") }
             }
         }
         for w in wanted { seenThisRun.insert(w.id) }

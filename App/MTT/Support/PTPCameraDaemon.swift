@@ -2,6 +2,10 @@ import Darwin
 import Foundation
 import IOKit
 import IOKit.usb
+import MTTShared
+import os
+
+private let log = MTTLog.logger("device")
 
 /// macOS's ptpcamerad (used by Photos / Image Capture) often grabs a phone's
 /// MTP interface the moment it's plugged in (Samsung phones declare it as a
@@ -52,18 +56,18 @@ enum PTPCameraDaemon {
         let targets = pids()
         for pid in targets {
             let rc = kill(pid, SIGTERM)
-            NSLog("MTT: SIGTERM ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)))")
+            log.notice("SIGTERM ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)), privacy: .public)")
         }
         usleep(500_000)
         for pid in targets where kill(pid, 0) == 0 {
             let rc = kill(pid, SIGKILL)
-            NSLog("MTT: SIGKILL ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)))")
+            log.notice("SIGKILL ptpcamerad pid \(pid) -> \(rc == 0 ? "ok" : String(cString: strerror(errno)), privacy: .public)")
         }
         for _ in 0..<20 {
             if !holdsMTPInterface() { return true }
             usleep(100_000)
         }
-        NSLog("MTT: ptpcamerad still holds the MTP interface")
+        log.error("ptpcamerad still holds the MTP interface")
         return false
     }
 

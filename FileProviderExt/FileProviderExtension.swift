@@ -2,6 +2,11 @@ import FileProvider
 import Foundation
 import MTTShared
 import UniformTypeIdentifiers
+import os
+
+let fpLog = MTTLog.logger("fileprovider")
+
+func pathString(_ path: [String]) -> String { "/" + path.joined(separator: "/") }
 
 /// Shows one phone storage in Finder. Every operation goes to the MTT app over
 /// XPC; file contents travel as file descriptors.
@@ -78,6 +83,7 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                        request: NSFileProviderRequest,
                        completionHandler: @escaping (URL?, NSFileProviderItem?, Error?) -> Void) -> Progress {
         let progress = Progress(totalUnitCount: 1)
+        let started = Date()
         Task {
             do {
                 let path = try requirePath(itemIdentifier)
@@ -98,8 +104,10 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                     try? FileManager.default.removeItem(at: dir)
                     throw error
                 }
+                fpLog.notice("fetch \(pathString(path), privacy: .public) (\(entry.size) bytes) in \(elapsed(since: started), privacy: .public)")
                 completionHandler(dest, makeItem(entry, parentPath: Array(path.dropLast())), nil)
             } catch {
+                fpLog.error("fetch \(itemIdentifier.rawValue, privacy: .public) failed after \(elapsed(since: started), privacy: .public): \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, nil, fileProviderError(error))
             }
             progress.completedUnitCount = 1
@@ -133,8 +141,10 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                 } else {
                     throw CocoaError(.featureUnsupported)
                 }
+                fpLog.notice("create \(pathString(parentPath + [entry.name]), privacy: .public) (\(isFolder ? "folder" : "\(entry.size) bytes", privacy: .public))")
                 completionHandler(makeItem(entry, parentPath: parentPath), [], false, nil)
             } catch {
+                fpLog.error("create \(itemTemplate.filename, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, [], false, fileProviderError(error))
             }
             progress.completedUnitCount = 1
@@ -175,8 +185,10 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                     entry.modified = uploaded.modified
                 }
                 // Dates, tags etc. can't be stored on the phone: report them as handled.
+                fpLog.notice("modify \(pathString(path), privacy: .public) fields=\(changedFields.rawValue)")
                 completionHandler(makeItem(entry, parentPath: Array(path.dropLast())), [], false, nil)
             } catch {
+                fpLog.error("modify \(item.filename, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(nil, [], false, fileProviderError(error))
             }
             progress.completedUnitCount = 1
@@ -198,8 +210,10 @@ final class FileProviderExtension: NSObject, NSFileProviderReplicatedExtension {
                     // Already gone on the phone: that's what we wanted.
                 }
                 ids.remove(path)
+                fpLog.notice("delete \(pathString(path), privacy: .public)")
                 completionHandler(nil)
             } catch {
+                fpLog.error("delete \(identifier.rawValue, privacy: .public) failed: \(error.localizedDescription, privacy: .public)")
                 completionHandler(fileProviderError(error))
             }
             progress.completedUnitCount = 1

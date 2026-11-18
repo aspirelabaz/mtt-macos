@@ -71,12 +71,15 @@ final class FolderEnumerator: NSObject, NSFileProviderEnumerator {
     func invalidate() {}
 
     func enumerateItems(for observer: NSFileProviderEnumerationObserver, startingAt page: NSFileProviderPage) {
+        let started = Date()
         Task {
             do {
                 let entries = try await ext.listFolder(path)
                 observer.didEnumerate(ext.makeItems(entries, parentPath: path))
                 observer.finishEnumerating(upTo: nil)
+                fpLog.info("enumerate \(pathString(self.path), privacy: .public): \(entries.count) items in \(elapsed(since: started), privacy: .public)")
             } catch {
+                fpLog.error("enumerate \(pathString(self.path), privacy: .public) failed after \(elapsed(since: started), privacy: .public): \(error.localizedDescription, privacy: .public)")
                 observer.finishEnumeratingWithError(fileProviderError(error))
             }
         }

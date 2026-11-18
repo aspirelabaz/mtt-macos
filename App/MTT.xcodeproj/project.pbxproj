@@ -33,6 +33,7 @@
 		CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */; };
 		DA9121201F147EC008FD9932 /* libmtp.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 073A195937BD121883FB0D04 /* libmtp.9.dylib */; };
 		EF87F2D5B686E6365D5066FA /* TransferManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */; };
+		F7A4175127B8BF1B313D1836 /* Diagnostics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 206D7E5097ECE1BE58E2ECA8 /* Diagnostics.swift */; };
 		F82062B66E895A92F1963DD2 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF4F5DBE0EC39F59B4B5839 /* BrowserModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +81,7 @@
 		073A195937BD121883FB0D04 /* libmtp.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmtp.9.dylib; path = ../Vendor/libmtp/lib/libmtp.9.dylib; sourceTree = "<group>"; };
 		07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MTTFileProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F3B7C4F39BE83440CB05984 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		206D7E5097ECE1BE58E2ECA8 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		2578E39B2DB99913F478E13C /* MTT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		384D2E594B0821174A17AC64 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 		3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceHost.swift; sourceTree = "<group>"; };
@@ -161,6 +163,7 @@
 		74A97A2860A1F2A30B35FDB1 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				206D7E5097ECE1BE58E2ECA8 /* Diagnostics.swift */,
 				A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */,
 				384D2E594B0821174A17AC64 /* Support.swift */,
 			);
@@ -374,6 +377,7 @@
 				917BB921EEBACCEA7DB44E2A /* BrowserView.swift in Sources */,
 				C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */,
 				34448E1D3121F621A77EA90F /* DeviceWorker.swift in Sources */,
+				F7A4175127B8BF1B313D1836 /* Diagnostics.swift in Sources */,
 				A703D24F49E3C7B685CF027C /* DomainManager.swift in Sources */,
 				6716C9D386A049129E992E46 /* DragPayload.swift in Sources */,
 				AE85A86C8C685E9231F83EAE /* FileViews.swift in Sources */,

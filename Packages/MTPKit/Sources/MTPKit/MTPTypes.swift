@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 /// MTP object ID of a storage's root, used as `parentID` for top-level items.
 public let MTPRootFolderID: UInt32 = 0xFFFF_FFFF
@@ -59,8 +60,14 @@ let mtpTraceHandle: FileHandle? = {
     return FileHandle(forWritingAtPath: path)
 }()
 
+let mtpLogger = Logger(subsystem: "local.mtt", category: "mtp")
+
+/// Notable libmtp-level events (reconnects, aborted transfers): unified log,
+/// plus the MTT_TRACE file when set.
 func mtpTrace(_ msg: @autoclosure () -> String) {
+    let text = msg()
+    mtpLogger.notice("\(text, privacy: .public)")
     guard let h = mtpTraceHandle else { return }
     let t = String(format: "%.3f", Date().timeIntervalSince1970.truncatingRemainder(dividingBy: 1000))
-    h.write("[\(t)] \(msg())\n".data(using: .utf8)!)
+    h.write("[\(t)] \(text)\n".data(using: .utf8)!)
 }

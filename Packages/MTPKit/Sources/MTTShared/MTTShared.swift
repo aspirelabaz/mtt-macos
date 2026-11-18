@@ -1,4 +1,5 @@
 import Foundation
+import os
 
 // Shared between the MTT app (which owns the USB connection) and the Finder
 // (File Provider) extension, which talks to the app over XPC. No libmtp here:
@@ -125,3 +126,16 @@ public enum MTTServiceError: Int, Sendable {
 
     func delete(serial: String, storageID: UInt32, path: [String], reply: @escaping (NSError?) -> Void)
 }
+
+// MARK: - Logging
+
+/// Unified logging for the app and the extension. Read with
+/// `/usr/bin/log show --predicate 'subsystem == "local.mtt"' --info --last 1h`
+/// or the app's "Xuất log chẩn đoán…" menu item.
+public enum MTTLog {
+    public static let subsystem = "local.mtt"
+    public static func logger(_ category: String) -> Logger { Logger(subsystem: subsystem, category: category) }
+}
+
+/// Seconds since `start`, for log lines.
+public func elapsed(since start: Date) -> String { String(format: "%.2fs", Date().timeIntervalSince(start)) }

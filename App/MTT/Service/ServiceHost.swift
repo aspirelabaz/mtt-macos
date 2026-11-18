@@ -1,6 +1,9 @@
 import Foundation
 import MTPKit
 import MTTShared
+import os
+
+private let serviceLog = MTTLog.logger("service")
 
 /// Vends `MTTServiceXPC` on the app's Mach service so the Finder extension
 /// can reach the phone. Only works when launchd started the app (see Agent).
@@ -39,7 +42,7 @@ private struct Reply<T>: @unchecked Sendable {
 final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
 
     func storages(serial: String, reply: @escaping (Data?, NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("storages", serial, reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -55,7 +58,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
     }
 
     func list(serial: String, storageID: UInt32, path: [String], reply: @escaping (Data?, NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("list", pathString(path), reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -70,7 +73,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
     }
 
     func entry(serial: String, storageID: UInt32, path: [String], reply: @escaping (Data?, NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("entry", pathString(path), reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -86,7 +89,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
 
     func download(serial: String, storageID: UInt32, path: [String], file: FileHandle,
                   reply: @escaping (NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("download", pathString(path), reply)
         let handle = Reply(call: file)  // keeps the descriptor open until we're done
         Task { @MainActor in
             do {
@@ -106,7 +109,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
 
     func upload(serial: String, storageID: UInt32, parentPath: [String], name: String, file: FileHandle,
                 replaceExisting: Bool, reply: @escaping (Data?, NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("upload", pathString(parentPath + [name]), reply)
         let handle = Reply(call: file)
         Task { @MainActor in
             do {
@@ -138,7 +141,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
 
     func createFolder(serial: String, storageID: UInt32, parentPath: [String], name: String,
                       reply: @escaping (Data?, NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("createFolder", pathString(parentPath + [name]), reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -161,7 +164,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
 
     func rename(serial: String, storageID: UInt32, path: [String], newName: String,
                 reply: @escaping (NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("rename", pathString(path) + " -> " + newName, reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -185,7 +188,7 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
     }
 
     func delete(serial: String, storageID: UInt32, path: [String], reply: @escaping (NSError?) -> Void) {
-        let r = Reply(call: reply)
+        let r = logged("delete", pathString(path), reply)
         Task { @MainActor in
             do {
                 let device = try await ServiceExport.device(serial)
@@ -199,6 +202,35 @@ final class ServiceExport: NSObject, MTTServiceXPC, @unchecked Sendable {
             } catch {
                 r.call(ServiceExport.nsError(error))
             }
+        }
+    }
+
+    // MARK: - Logging
+
+    /// Wraps a reply so the call is logged with its duration and outcome.
+    private func logged(_ op: String, _ detail: String, _ reply: @escaping (Data?, NSError?) -> Void) -> Reply<(Data?, NSError?) -> Void> {
+        let start = Date()
+        return Reply(call: { data, error in
+            ServiceExport.record(op, detail, start, error)
+            reply(data, error)
+        })
+    }
+
+    private func logged(_ op: String, _ detail: String, _ reply: @escaping (NSError?) -> Void) -> Reply<(NSError?) -> Void> {
+        let start = Date()
+        return Reply(call: { error in
+            ServiceExport.record(op, detail, start, error)
+            reply(error)
+        })
+    }
+
+    private static func record(_ op: String, _ detail: String, _ start: Date, _ error: NSError?) {
+        if let error {
+            serviceLog.error("\(op, privacy: .public) \(detail, privacy: .public) failed after \(elapsed(since: start), privacy: .public): \(error.localizedDescription, privacy: .public)")
+        } else if op == "list" || op == "entry" || op == "storages" {
+            serviceLog.info("\(op, privacy: .public) \(detail, privacy: .public) in \(elapsed(since: start), privacy: .public)")
+        } else {
+            serviceLog.notice("\(op, privacy: .public) \(detail, privacy: .public) in \(elapsed(since: start), privacy: .public)")
         }
     }
 

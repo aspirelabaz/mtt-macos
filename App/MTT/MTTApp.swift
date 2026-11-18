@@ -94,6 +94,7 @@ private struct MenuBarContent: View {
             NSApp.activate()
         }
         .keyboardShortcut("o")
+        Button("Xuất log chẩn đoán…") { Diagnostics.exportLog() }
         Divider()
         Button("Thoát MTT") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
