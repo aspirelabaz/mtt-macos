@@ -82,6 +82,13 @@ private struct MenuBarContent: View {
             Text("Chưa hiện trong Finder: cần bật MTT trong Cài đặt > Mục đăng nhập")
         }
         Divider()
+        Toggle("Tự giải phóng điện thoại khỏi Ảnh/Image Capture", isOn: Binding(
+            get: { PTPCameraDaemon.autoRelease },
+            set: { PTPCameraDaemon.autoRelease = $0 }))
+        if manager.devices.contains(where: \.blockedByPTPCamera) {
+            Button("Giải phóng điện thoại ngay") { manager.releaseFromPTPCameraAndRestart() }
+        }
+        Divider()
         Button("Mở trình duyệt file") {
             openWindow(id: "browser")
             NSApp.activate()

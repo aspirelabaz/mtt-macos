@@ -338,12 +338,30 @@ struct ConnectFailedView: View {
         } description: {
             VStack(alignment: .leading, spacing: 6) {
                 Text(message)
-                Text("• Mở khoá điện thoại và chọn \"Chuyển file\" trong thông báo USB.")
-                Text("• Tắt OpenMTP, Android File Transfer, hoặc Android Studio nếu đang mở.")
+                if device.blockedByPTPCamera {
+                    Text("Bấm nút bên dưới để tạm tắt dịch vụ đó (macOS sẽ tự bật lại khi cần) và khởi động lại MTT.")
+                } else {
+                    Text("• Mở khoá điện thoại và chọn \"Chuyển file\" trong thông báo USB.")
+                    Text("• Tắt OpenMTP, Android File Transfer, hoặc Android Studio nếu đang mở.")
+                }
             }
             .multilineTextAlignment(.leading)
         } actions: {
-            Button("Thử lại") { DeviceManager.shared.retry(device) }
+            VStack(spacing: 10) {
+                if device.blockedByPTPCamera {
+                    Button("Giải phóng khỏi Ảnh/Image Capture") {
+                        DeviceManager.shared.releaseFromPTPCameraAndRestart()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    Toggle("Tự động làm việc này mỗi khi cắm máy", isOn: Binding(
+                        get: { PTPCameraDaemon.autoRelease },
+                        set: { PTPCameraDaemon.autoRelease = $0 }))
+                        .toggleStyle(.checkbox)
+                }
+                Button("Thử lại") { DeviceManager.shared.retry(device) }
+            }
+            .fixedSize()
         }
     }
 }

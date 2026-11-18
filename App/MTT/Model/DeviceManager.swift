@@ -1,5 +1,6 @@
 import Foundation
 import MTPKit
+import MTTShared
 import Observation
 
 /// One phone plugged in over USB.
@@ -16,6 +17,8 @@ final class ConnectedDevice: Identifiable {
     let raw: RawDeviceInfo
     var name: String
     var state: State = .connecting
+    /// The last connect failed because macOS's ptpcamerad holds the phone.
+    var blockedByPTPCamera = false
     var info: MTPDeviceInfo?
     var storages: [MTPStorage] = []
     /// Number of operations queued or running on the worker.
@@ -37,11 +40,17 @@ final class ConnectedDevice: Identifiable {
     /// after switching to "File transfer", the phone often isn't ready yet.
     func connect() async {
         state = .connecting
+        blockedByPTPCamera = false
         let raw = self.raw
         var lastError: Error = MTPError.connectionFailed
         for attempt in 0..<4 {
             if attempt > 0 { try? await Task.sleep(for: .seconds(1.5)) }
             guard state == .connecting else { return }  // unplugged meanwhile
+            // Free the phone from Photos/Image Capture first, if the user allowed it.
+            // (Done before trying: failed opens leak USB handles inside libmtp.)
+            if PTPCameraDaemon.autoRelease, PTPCameraDaemon.holdsMTPInterface() {
+                _ = try? await runBlocking { PTPCameraDaemon.stop() }
+            }
             do {
                 let device = try await runBlocking { try MTPDevice(raw: raw) }
                 let worker = DeviceWorker(device: device)
@@ -55,9 +64,17 @@ final class ConnectedDevice: Identifiable {
                 return
             } catch {
                 lastError = error
+                if PTPCameraDaemon.holdsMTPInterface() && !PTPCameraDaemon.autoRelease {
+                    break  // retrying won't help until the user frees it
+                }
             }
         }
-        state = .failed(describe(lastError))
+        if PTPCameraDaemon.holdsMTPInterface() {
+            blockedByPTPCamera = true
+            state = .failed("macOS (dịch vụ ptpcamerad của Ảnh / Image Capture) đang giữ kết nối với điện thoại.")
+        } else {
+            state = .failed(describe(lastError))
+        }
     }
 
     /// Runs `body` on this phone's worker queue.
@@ -201,5 +218,23 @@ final class DeviceManager {
 
     func retry(_ device: ConnectedDevice) {
         Task { await device.connect() }
+    }
+
+    /// User asked to free the phone from ptpcamerad. Failed opens leave USB handles
+    /// open inside libmtp, so restart the whole app afterwards to start clean.
+    func releaseFromPTPCameraAndRestart() {
+        PTPCameraDaemon.stop()
+        if Agent.launchedByLaunchd {
+            // launchd starts a fresh copy (the Finder extension needs it running).
+            UserDefaults.standard.set(true, forKey: "MTTOpenWindowOnLaunch")
+            let p = Process()
+            p.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+            p.arguments = ["kickstart", "-k", "gui/\(getuid())/\(MTTShared.agentLabel)"]
+            try? p.run()  // kills this process and starts a new one
+        } else {
+            Task {
+                for d in devices { await d.connect() }
+            }
+        }
     }
 }

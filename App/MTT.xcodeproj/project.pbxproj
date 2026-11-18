@@ -27,6 +27,7 @@
 		B653956BC33874A9C13D6849 /* ServiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */; };
 		BE9E0DAFBDF430ECA482322E /* MTTFileProvider.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */; };
+		C6FD99EDCA4B7D4B8CE0C9CB /* PTPCameraDaemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */; };
 		CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */; };
 		EF87F2D5B686E6365D5066FA /* TransferManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */; };
 		F82062B66E895A92F1963DD2 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF4F5DBE0EC39F59B4B5839 /* BrowserModel.swift */; };
@@ -79,6 +80,7 @@
 		914324AD3D832C10D6341396 /* DomainManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DomainManager.swift; sourceTree = "<group>"; };
 		98E431DCBE2C1EA038ED5880 /* TransfersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransfersView.swift; sourceTree = "<group>"; };
 		A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransferManager.swift; sourceTree = "<group>"; };
+		A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PTPCameraDaemon.swift; sourceTree = "<group>"; };
 		B68859E6A74783EFD9338D37 /* DeviceWorker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceWorker.swift; sourceTree = "<group>"; };
 		C7CE8690F3F4DFA82652C6E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceManager.swift; sourceTree = "<group>"; };
@@ -131,6 +133,7 @@
 		74A97A2860A1F2A30B35FDB1 /* Support */ = {
 			isa = PBXGroup;
 			children = (
+				A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */,
 				384D2E594B0821174A17AC64 /* Support.swift */,
 			);
 			path = Support;
@@ -346,6 +349,7 @@
 				6716C9D386A049129E992E46 /* DragPayload.swift in Sources */,
 				AE85A86C8C685E9231F83EAE /* FileViews.swift in Sources */,
 				407B4973291BCF1B7E5B8CBA /* MTTApp.swift in Sources */,
+				C6FD99EDCA4B7D4B8CE0C9CB /* PTPCameraDaemon.swift in Sources */,
 				CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */,
 				3BCFF4179BFEFD114A41CDC6 /* SidebarView.swift in Sources */,
 				0E92E1E2F37746B84510FDAB /* Support.swift in Sources */,

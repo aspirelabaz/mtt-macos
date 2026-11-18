@@ -11,14 +11,18 @@ struct DragPayload: Transferable, Sendable {
     let deviceID: String
 
     static var transferRepresentation: some TransferRepresentation {
+        // Without suggestedFileName, Finder names the dropped file after the
+        // content type ("data", no extension).
         FileRepresentation(exportedContentType: .folder) { payload in
             SentTransferredFile(try await payload.fetch())
         }
+        .suggestedFileName { $0.item.name }
         .exportingCondition { $0.item.isFolder }
 
         FileRepresentation(exportedContentType: .data) { payload in
             SentTransferredFile(try await payload.fetch())
         }
+        .suggestedFileName { $0.item.name }
         .exportingCondition { !$0.item.isFolder }
     }
 
