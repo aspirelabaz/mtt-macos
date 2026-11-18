@@ -17,7 +17,12 @@ pkill -x MTT || true
 pkill -f MTTFileProvider || true
 sleep 1
 rm -rf /Applications/MTT.app
+# Bump the bundle's date: macOS caches app icons by bundle path + modification
+# date, and Xcode never updates the .app folder's own date (the Dock kept
+# showing a stale generic icon).
+touch "$APP"
 ditto "$APP" /Applications/MTT.app
+/System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister -f /Applications/MTT.app
 
 # Opening it hands over to launchd (see App/MTT/Service/Agent.swift).
 open /Applications/MTT.app
