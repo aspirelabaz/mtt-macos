@@ -113,6 +113,22 @@ mtt-macos/
 
 **Xong khi:** Dùng app thay được OpenMTP cho nhu cầu hằng ngày.
 
+### Tiến độ (2026-11-18)
+
+Đã viết xong toàn bộ danh sách trên, project Xcode sinh bằng XcodeGen ([App/project.yml](App/project.yml)). App mở được, nhận Pixel 3 XL và liệt kê thư mục gốc. Các thao tác bằng chuột (mở thư mục, kéo thả, xoá, đổi tên, chuyển file qua giao diện) **đang chờ thử tay**.
+
+- Mỗi điện thoại có một hàng đợi nền riêng: MTP chỉ cho một thao tác một lúc, nên khi đang chuyển file lớn, việc mở thư mục phải chờ (app hiện "Đang chờ lượt chuyển file hiện tại xong…").
+- Mọi thao tác tìm file theo đường dẫn, cache ID thư mục theo `sessionGeneration`, tự tìm lại khi ID cũ hết hiệu lực.
+- Trùng tên khi tải về hoặc chép lên thì tự đặt "tên (1).ext".
+- Mở file (bấm đúp): tải vào thư mục tạm rồi mở bằng app mặc định.
+- Kéo ra Finder: chỉ tải khi thả (SwiftUI `Transferable`).
+- Đã thử tay các thao tác chuột (duyệt, lưới, mở file, kéo thả, đổi tên, xoá, tải về, menu bar): ổn.
+- **Sao chép / Dán** (chuột phải hoặc ⌘C / ⌘V khi đang chọn trong danh sách file):
+  - Sao chép: tải ngay vào thư mục tạm rồi đặt file lên clipboard, vì Finder chỉ dán được file đã có trên Mac.
+  - Dán: chép file đang có trong clipboard lên điện thoại, vào thư mục hiện tại hoặc thư mục được chuột phải.
+  - Sao chép trong app rồi dán sang thư mục khác trên điện thoại cũng chạy được, vì đi vòng qua bản tạm trên Mac.
+  - Đang chờ thử tay.
+
 ## Giai đoạn 3: Hiện trong Finder (1–2 tuần, phần khó nhất)
 
 | Việc | Ghi chú |

@@ -1,0 +1,37 @@
+name: MTT
+options:
+  bundleIdPrefix: local.mtt
+  deploymentTarget:
+    macOS: "27.0"
+  createIntermediateGroups: true
+
+packages:
+  MTPKit:
+    path: ../Packages/MTPKit
+
+targets:
+  MTT:
+    type: application
+    platform: macOS
+    sources: [MTT]
+    dependencies:
+      - package: MTPKit
+        product: MTPKit
+    settings:
+      base:
+        PRODUCT_NAME: MTT
+        PRODUCT_BUNDLE_IDENTIFIER: local.mtt.app
+        MARKETING_VERSION: "0.1"
+        CURRENT_PROJECT_VERSION: "1"
+        SWIFT_VERSION: "6.0"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: MTT
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.utilities
+        # Personal-use build: sign to run locally, no sandbox, no hardened runtime
+        # (Homebrew's libmtp dylib is not signed by us, so library validation would block it).
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Manual
+        ENABLE_HARDENED_RUNTIME: NO
+        ENABLE_APP_SANDBOX: NO
+        LIBRARY_SEARCH_PATHS: /opt/homebrew/opt/libmtp/lib
+        ENABLE_USER_SCRIPT_SANDBOXING: NO

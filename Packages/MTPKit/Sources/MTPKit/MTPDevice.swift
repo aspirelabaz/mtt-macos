@@ -20,6 +20,9 @@ public final class MTPDevice: @unchecked Sendable {
     public private(set) var isAlive = true
     /// False if libmtp's private layout didn't match and the USB reset on close is still on.
     public private(set) var resetOnCloseDisabled = false
+    /// Goes up by one on every successful `reconnect()`. Object IDs from an older
+    /// generation may no longer be valid.
+    public private(set) var sessionGeneration = 0
 
     private var handle: UnsafeMutablePointer<LIBMTP_mtpdevice_t>?
     private let lock = NSRecursiveLock()
@@ -113,6 +116,7 @@ public final class MTPDevice: @unchecked Sendable {
                 resetOnCloseDisabled = resetOff
                 info = newInfo
                 isAlive = true
+                sessionGeneration += 1
                 return
             } catch {
                 mtpTrace("reconnect: open failed: \(error)")
@@ -288,6 +292,22 @@ public final class MTPDevice: @unchecked Sendable {
             }
             return MTPEntry(id: f.pointee.item_id, parentID: parentID, storageID: storageID,
                             name: fileName, size: size, modified: mtime, isFolder: false)
+        }
+    }
+
+    /// The phone's own small preview (usually JPEG) for photos and videos, or nil.
+    public func thumbnail(id: UInt32) throws -> Data? {
+        try withHandle { h in
+            var data: UnsafeMutablePointer<UInt8>?
+            var size: UInt32 = 0
+            let rc = LIBMTP_Get_Thumbnail(h, id, &data, &size)
+            defer { free(data) }
+            guard rc == 0, let data, size > 0 else {
+                // "No thumbnail" is normal for most files; only USB failures matter.
+                if let err = takeErrors(h), err.1 { throw classify("Thumbnail", err) }
+                return nil
+            }
+            return Data(bytes: data, count: Int(size))
         }
     }
 

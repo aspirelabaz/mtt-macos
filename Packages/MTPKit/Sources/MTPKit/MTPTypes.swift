@@ -14,7 +14,7 @@ public struct MTPStorage: Sendable, Hashable {
     public var isReadOnly: Bool { accessCapability != 0 }
 }
 
-public struct MTPEntry: Sendable, Hashable {
+public struct MTPEntry: Sendable, Hashable, Identifiable {
     public let id: UInt32
     public let parentID: UInt32
     public let storageID: UInt32
