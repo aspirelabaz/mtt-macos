@@ -1,9 +1,16 @@
 // swift-tools-version: 6.0
+import Foundation
 import PackageDescription
+
+/// Vendored libmtp + libusb (see Vendor/libmtp/README.md), relative to this file.
+let vendorLib = URL(fileURLWithPath: #filePath)
+    .deletingLastPathComponent()
+    .appendingPathComponent("../../Vendor/libmtp/lib")
+    .standardizedFileURL.path
 
 let package = Package(
     name: "MTPKit",
-    // Personal-use app: match the macOS version Homebrew's libmtp was built for.
+    // Personal-use app: match the macOS version the vendored libmtp was built for.
     platforms: [.macOS("27.0")],
     products: [
         .library(name: "MTPKit", targets: ["MTPKit"]),
@@ -11,11 +18,8 @@ let package = Package(
         .executable(name: "mtt", targets: ["mtt"]),
     ],
     targets: [
-        // Thin module map over Homebrew's libmtp (/opt/homebrew/opt/libmtp).
-        .systemLibrary(
-            name: "CLibMTP",
-            providers: [.brew(["libmtp"])]
-        ),
+        // Module map over the vendored libmtp header; links -lmtp.
+        .systemLibrary(name: "CLibMTP"),
         // XPC protocol + DTOs shared by the app and the Finder extension (no libmtp).
         .target(name: "MTTShared"),
         // Small C helpers that reach into libmtp's private device state.
@@ -26,13 +30,13 @@ let package = Package(
         .target(
             name: "MTPKit",
             dependencies: ["CLibMTP", "CMTPShim"],
-            cSettings: [.unsafeFlags(["-I/opt/homebrew/opt/libmtp/include"])],
-            linkerSettings: [.unsafeFlags(["-L/opt/homebrew/opt/libmtp/lib"])]
+            linkerSettings: [.unsafeFlags(["-L\(vendorLib)"])]
         ),
         .executableTarget(
             name: "mtt",
             dependencies: ["MTPKit"],
-            linkerSettings: [.unsafeFlags(["-L/opt/homebrew/opt/libmtp/lib"])]
+            // The CLI loads the vendored dylibs straight from Vendor/.
+            linkerSettings: [.unsafeFlags(["-L\(vendorLib)", "-Xlinker", "-rpath", "-Xlinker", vendorLib])]
         ),
     ]
 )

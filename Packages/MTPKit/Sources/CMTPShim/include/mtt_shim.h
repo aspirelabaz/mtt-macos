@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "/opt/homebrew/opt/libmtp/include/libmtp.h"
+#include "../../../../../Vendor/libmtp/include/libmtp.h"  // vendored, see Vendor/libmtp/README.md
 
 /// Flags from libmtp's src/device-flags.h (not installed by Homebrew).
 #define MTT_FLAG_NO_RELEASE_INTERFACE 0x00000040u  /* close skips clear-stall + release */

@@ -1,2 +1,3 @@
 #pragma once
-#include "/opt/homebrew/opt/libmtp/include/libmtp.h"
+// Vendored copy (see Vendor/libmtp/README.md); path is relative to this file.
+#include "../../../../Vendor/libmtp/include/libmtp.h"

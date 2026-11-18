@@ -16,6 +16,7 @@
 		34448E1D3121F621A77EA90F /* DeviceWorker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B68859E6A74783EFD9338D37 /* DeviceWorker.swift */; };
 		3BCFF4179BFEFD114A41CDC6 /* SidebarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C7AAA6BCFE7A82706F078BF /* SidebarView.swift */; };
 		407B4973291BCF1B7E5B8CBA /* MTTApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */; };
+		574DD60582D0BCAF7FA8CC39 /* libusb-1.0.0.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 4593D8A00B12B2353C7ADC13 /* libusb-1.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		661CE954DB1EDB28F0456A58 /* Agent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6700946C2A6D5C7FE9A5DE32 /* Agent.swift */; };
 		6716C9D386A049129E992E46 /* DragPayload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50073C2B30278F826E8B37BC /* DragPayload.swift */; };
 		70A309353FE22CC67BFF113B /* MTPKit in Frameworks */ = {isa = PBXBuildFile; productRef = AEB4710ED3E1D42C40D16640 /* MTPKit */; };
@@ -25,10 +26,12 @@
 		A703D24F49E3C7B685CF027C /* DomainManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 914324AD3D832C10D6341396 /* DomainManager.swift */; };
 		AE85A86C8C685E9231F83EAE /* FileViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 05ADCE29B9E1362BCD7F0ADA /* FileViews.swift */; };
 		B653956BC33874A9C13D6849 /* ServiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */; };
+		BD7DADF5334ABCA5E2C9E7C7 /* libmtp.9.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 073A195937BD121883FB0D04 /* libmtp.9.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BE9E0DAFBDF430ECA482322E /* MTTFileProvider.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */; };
 		C6FD99EDCA4B7D4B8CE0C9CB /* PTPCameraDaemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */; };
 		CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */; };
+		DA9121201F147EC008FD9932 /* libmtp.9.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 073A195937BD121883FB0D04 /* libmtp.9.dylib */; };
 		EF87F2D5B686E6365D5066FA /* TransferManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0A6B9C20DBCE6E63496FBD5 /* TransferManager.swift */; };
 		F82062B66E895A92F1963DD2 /* BrowserModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7DF4F5DBE0EC39F59B4B5839 /* BrowserModel.swift */; };
 /* End PBXBuildFile section */
@@ -55,6 +58,18 @@
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		62F9958ECCA3D50BE925C529 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				BD7DADF5334ABCA5E2C9E7C7 /* libmtp.9.dylib in Embed Frameworks */,
+				574DD60582D0BCAF7FA8CC39 /* libusb-1.0.0.dylib in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -62,11 +77,13 @@
 		02E3BC7306CA743622EAC617 /* MTT.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MTT.entitlements; sourceTree = "<group>"; };
 		04D2E7DC8A500C5D44CB209D /* MTPKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = MTPKit; path = ../Packages/MTPKit; sourceTree = SOURCE_ROOT; };
 		05ADCE29B9E1362BCD7F0ADA /* FileViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileViews.swift; sourceTree = "<group>"; };
+		073A195937BD121883FB0D04 /* libmtp.9.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmtp.9.dylib; path = ../Vendor/libmtp/lib/libmtp.9.dylib; sourceTree = "<group>"; };
 		07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MTTFileProvider.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1F3B7C4F39BE83440CB05984 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2578E39B2DB99913F478E13C /* MTT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTT.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		384D2E594B0821174A17AC64 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 		3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceHost.swift; sourceTree = "<group>"; };
+		4593D8A00B12B2353C7ADC13 /* libusb-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.0.dylib"; path = "../Vendor/libmtp/lib/libusb-1.0.0.dylib"; sourceTree = "<group>"; };
 		50073C2B30278F826E8B37BC /* DragPayload.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DragPayload.swift; sourceTree = "<group>"; };
 		51153ADF87B638FB24723789 /* FileProviderExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileProviderExtension.swift; sourceTree = "<group>"; };
 		51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MTTApp.swift; sourceTree = "<group>"; };
@@ -102,6 +119,7 @@
 			files = (
 				70A309353FE22CC67BFF113B /* MTPKit in Frameworks */,
 				112A1A5BC2A477858CF7BFE7 /* MTTShared in Frameworks */,
+				DA9121201F147EC008FD9932 /* libmtp.9.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -114,8 +132,18 @@
 				D149640A8BE56A5433CCF237 /* MTT */,
 				AB72D39BD3FDC43EEDDEAF25 /* mtt-macos */,
 				7D0F8951AF046C8E40B3D1DB /* Packages */,
+				190C3F6A2B525DA869A979B7 /* Frameworks */,
 				D833171A129574E08D0D51EE /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		190C3F6A2B525DA869A979B7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				073A195937BD121883FB0D04 /* libmtp.9.dylib */,
+				4593D8A00B12B2353C7ADC13 /* libusb-1.0.0.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		2B3F6AB764756A097788EDF3 /* Views */ = {
@@ -224,6 +252,7 @@
 				C1D143EBBF53D9A0E6CDD96F /* Sources */,
 				F9F0B7258E80C12330453732 /* Frameworks */,
 				08ED9EDBB6283CBDA49B7BB9 /* Embed Foundation Extensions */,
+				62F9958ECCA3D50BE925C529 /* Embed Frameworks */,
 				13D313368A7384D5FDC940CD /* Write launch agent plist */,
 			);
 			buildRules = (
@@ -377,12 +406,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_APP_SANDBOX = NO;
-				INFOPLIST_FILE = MTT/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
+				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/../Frameworks",
+					"\"../Vendor/libmtp/lib\"",
 				);
-				LIBRARY_SEARCH_PATHS = /opt/homebrew/opt/libmtp/lib;
+				INFOPLIST_FILE = MTT/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../Vendor/libmtp/lib";
 				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app;
 				PRODUCT_NAME = MTT;
 				SDKROOT = macosx;
@@ -398,12 +428,13 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				ENABLE_APP_SANDBOX = NO;
-				INFOPLIST_FILE = MTT/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = (
+				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"@executable_path/../Frameworks",
+					"\"../Vendor/libmtp/lib\"",
 				);
-				LIBRARY_SEARCH_PATHS = /opt/homebrew/opt/libmtp/lib;
+				INFOPLIST_FILE = MTT/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../Vendor/libmtp/lib";
 				PRODUCT_BUNDLE_IDENTIFIER = local.mtt.app;
 				PRODUCT_NAME = MTT;
 				SDKROOT = macosx;

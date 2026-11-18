@@ -32,6 +32,14 @@ targets:
       - package: MTPKit
         product: MTTShared
       - target: MTTFileProvider
+      # Vendored libmtp/libusb, copied into Contents/Frameworks and re-signed.
+      - framework: ../Vendor/libmtp/lib/libmtp.9.dylib
+        embed: true
+        codeSign: true
+      - framework: ../Vendor/libmtp/lib/libusb-1.0.0.dylib
+        embed: true
+        codeSign: true
+        link: false
     info:
       path: MTT/Info.plist
       properties:
@@ -48,10 +56,10 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: local.mtt.app
         SWIFT_VERSION: "6.0"
         CODE_SIGN_STYLE: Automatic
-        # Not sandboxed: it owns the USB connection via Homebrew's libmtp
-        # (no library validation for the same reason).
+        # Not sandboxed: it owns the USB connection through libmtp/libusb.
         ENABLE_APP_SANDBOX: NO
-        LIBRARY_SEARCH_PATHS: /opt/homebrew/opt/libmtp/lib
+        LIBRARY_SEARCH_PATHS: $(SRCROOT)/../Vendor/libmtp/lib
+        LD_RUNPATH_SEARCH_PATHS: "@executable_path/../Frameworks"
     postBuildScripts:
       - name: Write launch agent plist
         basedOnDependencyAnalysis: false
