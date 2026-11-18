@@ -60,6 +60,7 @@ targets:
         PRODUCT_NAME: MTT
         PRODUCT_BUNDLE_IDENTIFIER: local.mtt.app
         SWIFT_VERSION: "6.0"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         CODE_SIGN_STYLE: Automatic
         # Not sandboxed: it owns the USB connection through libmtp/libusb.
         ENABLE_APP_SANDBOX: NO

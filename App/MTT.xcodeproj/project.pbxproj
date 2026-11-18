@@ -28,6 +28,7 @@
 		B653956BC33874A9C13D6849 /* ServiceClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 656B6A81A5E33AB4C2333D77 /* ServiceClient.swift */; };
 		BD7DADF5334ABCA5E2C9E7C7 /* libmtp.9.dylib in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 073A195937BD121883FB0D04 /* libmtp.9.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		BE9E0DAFBDF430ECA482322E /* MTTFileProvider.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 07ADDA9D527B82F8F0AA0AE4 /* MTTFileProvider.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C6F891C733B5D6815346AE69 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2619992C0FE1A0C624A2F546 /* Assets.xcassets */; };
 		C6FAAABB7B5EB85D76058F45 /* DeviceManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = E149C5BB2E3F91FD35DE0448 /* DeviceManager.swift */; };
 		C6FD99EDCA4B7D4B8CE0C9CB /* PTPCameraDaemon.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0F5E92037BEBE4387103152 /* PTPCameraDaemon.swift */; };
 		CC0BF6E25FAFBE7EB9585EE1 /* ServiceHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */; };
@@ -83,6 +84,7 @@
 		1F3B7C4F39BE83440CB05984 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		206D7E5097ECE1BE58E2ECA8 /* Diagnostics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Diagnostics.swift; sourceTree = "<group>"; };
 		2578E39B2DB99913F478E13C /* MTT.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MTT.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2619992C0FE1A0C624A2F546 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		384D2E594B0821174A17AC64 /* Support.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Support.swift; sourceTree = "<group>"; };
 		3E8CFBEFCDD57E409DFF8D9E /* ServiceHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceHost.swift; sourceTree = "<group>"; };
 		4593D8A00B12B2353C7ADC13 /* libusb-1.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libusb-1.0.0.dylib"; path = "../Vendor/libmtp/lib/libusb-1.0.0.dylib"; sourceTree = "<group>"; };
@@ -214,6 +216,7 @@
 		D149640A8BE56A5433CCF237 /* MTT */ = {
 			isa = PBXGroup;
 			children = (
+				2619992C0FE1A0C624A2F546 /* Assets.xcassets */,
 				C7CE8690F3F4DFA82652C6E1 /* Info.plist */,
 				02E3BC7306CA743622EAC617 /* MTT.entitlements */,
 				51AB1EA0754A82345BA9E8F7 /* MTTApp.swift */,
@@ -253,6 +256,7 @@
 			buildConfigurationList = 4B54EF1AE237B8319E36E420 /* Build configuration list for PBXNativeTarget "MTT" */;
 			buildPhases = (
 				C1D143EBBF53D9A0E6CDD96F /* Sources */,
+				928E9AB6F60ACD02F1431B96 /* Resources */,
 				F9F0B7258E80C12330453732 /* Frameworks */,
 				08ED9EDBB6283CBDA49B7BB9 /* Embed Foundation Extensions */,
 				62F9958ECCA3D50BE925C529 /* Embed Frameworks */,
@@ -332,6 +336,17 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		928E9AB6F60ACD02F1431B96 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C6F891C733B5D6815346AE69 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
 		13D313368A7384D5FDC940CD /* Write launch agent plist */ = {
